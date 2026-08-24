@@ -3,6 +3,7 @@ import { settleDay } from './settleDay.js';
 import { genOrders } from './orders.js';
 import { runAudits } from './logistics.js';
 import { fulfilOrders, expireSla } from './fulfil.js';
+import { checkStage } from './stageCheck.js';
 
 /** tick: 1 giây thực = +4 phút game (spec A3). Thuần túy, chỉ dùng rng. */
 export function tick(s: GameState, dtGameMinutes: number, rng: Rng): GameState {
@@ -21,5 +22,6 @@ export function tick(s: GameState, dtGameMinutes: number, rng: Rng): GameState {
     if (next.clock.day > 30) { next.clock.day = 1; next.clock.month++; }
     if (next.clock.month > 12) { next.clock.month = 1; next.clock.year++; }
   }
+  next = checkStage(next);
   return next;
 }

@@ -209,3 +209,9 @@ export function chooseIndustry(s: GameState, industryId: string): GameState {
   if (s.industries.length >= s.stage) return reject(s, 'Chưa mở thêm ngành ở màn này');
   return ok({ ...s, industries: [...s.industries, industryId], seo: { ...s.seo, [industryId]: UP.seoStart } });
 }
+
+export function advanceStage(s: GameState): GameState {
+  if (!s.stageComplete) return reject(s, 'Chưa hoàn thành mục tiêu màn');
+  const reward = ST.stages[s.stage - 1].reward ?? 0;
+  return ok({ ...s, money: s.money + reward, stage: s.stage + 1, stageComplete: false });
+}

@@ -27,11 +27,16 @@ export function settleDay(s: GameState): GameState {
     if (c.ratingLocked && s.rating >= (def as any).minRating) return { ...c, ratingLocked: false };
     return c;
   });
+  const revenue = Object.values(s.dayRevenue).reduce((a, b) => a + b, 0);
   const report: DayReport = {
     day: s.clock.day, month: s.clock.month,
-    revenueByChannel: {}, ordersByChannel: {}, commission: 0,
-    channelFees, rent, maintenance, purchases: 0, other: 0,
-    net: -(rent + maintenance + channelFees),
+    revenueByChannel: s.dayRevenue, ordersByChannel: s.dayOrders,
+    commission: s.dayCommission, channelFees, rent, maintenance,
+    purchases: s.dayPurchases, other: 0,
+    net: revenue - s.dayCommission - channelFees - rent - maintenance - s.dayPurchases,
   };
-  return { ...s, money, channels: rated.map(({ fee, ...c }: any) => c), reports: [...s.reports, report] };
+  return {
+    ...s, money, channels: rated.map(({ fee, ...c }: any) => c), reports: [...s.reports, report],
+    dayRevenue: {}, dayOrders: {}, dayCommission: 0, dayPurchases: 0,
+  };
 }

@@ -9,3 +9,4 @@ export * from './env.js';
 export * from './actions.js';
 export { advanceShipping, runAudits, shelfCapacity, packerSpeedTotal } from './logistics.js';
 export { fulfilOrders, expireSla, comboBonus, packCapacityPerSecond, commissionOf } from './fulfil.js';
+export { checkStage } from './stageCheck.js';
