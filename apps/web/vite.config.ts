@@ -1,3 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-export default defineConfig({ plugins: [react()], test: { environment: 'jsdom' } } as any);
+export default defineConfig({
+  plugins: [react()],
+  server: { port: 5173, strictPort: true },
+  test: { environment: 'jsdom' },
+} as any);

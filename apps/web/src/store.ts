@@ -20,8 +20,11 @@ export const useGame = create<GameStore>((set, get) => {
   const w = new Worker(new URL('./worker/simWorker.ts', import.meta.url), { type: 'module' });
   worker = w;
   const savedRaw = localStorage.getItem(SAVE_KEY);
+  // Save hỏng → không crash, rơi về chơi mới (worker cũng tự trả `nosave` cho blob hỏng).
+  let savedSeed: number | null = null;
+  try { savedSeed = savedRaw ? JSON.parse(savedRaw).seed ?? null : null; } catch { savedSeed = null; }
   // UI shell code: performance.now() only seeds the UI; the sim only ever sees the numeric seed.
-  const seed = savedRaw ? JSON.parse(savedRaw).seed : (Math.floor(performance.now() * 1000) % 2 ** 31 || 1);
+  const seed = savedSeed ?? (Math.floor(performance.now() * 1000) % 2 ** 31 || 1);
   w.onmessage = (ev) => {
     if (ev.data.type === 'state') set({ game: ev.data.state, booted: true, hasSave: true });
     if (ev.data.type === 'nosave') set({ booted: true, hasSave: false });
@@ -36,7 +39,7 @@ export const useGame = create<GameStore>((set, get) => {
   document.addEventListener('visibilitychange', () => document.hidden && save());
 
   return {
-    game: null, paused: false, booted: false, hasSave: !!savedRaw, seed,
+    game: null, paused: false, booted: false, hasSave: savedSeed !== null, seed,
     dispatch: (name, ...args) => w.postMessage({ type: 'action', name, args }),
     start: (industryId) => w.postMessage({ type: 'start', seed: get().seed, industryId }),
     setPaused: (paused) => { set({ paused }); w.postMessage({ type: 'setPaused', paused }); },
