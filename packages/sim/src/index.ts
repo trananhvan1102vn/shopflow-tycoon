@@ -3,5 +3,6 @@ export { tick } from './tick.js';
 export { settleDay } from './settleDay.js';
 export { createGame } from './create.js';
 export { orderRate } from './formulas.js';
+export { genOrders } from './orders.js';
 export { makeRng } from './rng.js';
 export * from './env.js';
