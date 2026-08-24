@@ -150,7 +150,7 @@ git commit -m "feat(sim): seeded rng + M1 state fields"
 **Interfaces:**
 - Produces:
   - `activeEvents(month: number, day: number): CalendarEvent[]` (raw entries from `calendar.events`)
-  - `trafficEnvMult(clock: {minute:number; day:number; month:number}, industryId: string): number` — weekend × doubleDay × events × hour multiplier
+  - `trafficEnvMult(clock: {minute:number; day:number; month:number}, industryId: string): number` — weekend × doubleDay × events (hour multiplier is NOT included — callers multiply `hourMult(clock.minute)` separately, as Task 3 does)
   - `retailEnvMult(clock, industryId): number` — weekend(1.05) × doubleDay × event retailMult
   - `wholesaleEnvMult(clock, industryId): number` — weekend(0.95) × event wholesaleMult
   - `hourMult(minute: number): number`
