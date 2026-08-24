@@ -3,13 +3,13 @@ import { useGame } from './store';
 import IndustrySelect from './screens/IndustrySelect';
 import Warehouse from './screens/Warehouse';
 import Restock from './screens/Restock';
+import Sales from './screens/Sales';
 import Hud from './components/Hud';
 import TabBar, { type Tab } from './components/TabBar';
 import Toast from './components/Toast';
 
 /** Placeholder cho các màn sẽ làm ở task sau. */
-const PLACEHOLDERS: Record<Exclude<Tab, 'kho' | 'nhap'>, string> = {
-  ban: '🛍️ Bán hàng — sắp có',
+const PLACEHOLDERS: Record<Exclude<Tab, 'kho' | 'nhap' | 'ban'>, string> = {
   quangba: '🔍 Quảng bá — sắp có',
   them: '🔒 Mở ở màn 3',
 };
@@ -30,6 +30,8 @@ export default function App() {
           <Warehouse />
         ) : tab === 'nhap' ? (
           <Restock />
+        ) : tab === 'ban' ? (
+          <Sales />
         ) : (
           <div className="rounded-xl bg-white p-8 text-center text-slate-500 shadow">{PLACEHOLDERS[tab]}</div>
         )}
