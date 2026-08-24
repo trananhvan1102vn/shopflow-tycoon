@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { industries as IND, suppliers as SUP, calendar as CAL } from '@shopflow/data';
 import type { Delivery } from '@shopflow/sim';
 import { useGame } from '../store';
-import { usd } from '../format';
+import { usdCents } from '../format';
 
 /** Lịch game: 12 tháng × 30 ngày (tick.ts). */
 const dayOfYear = (m: number, d: number) => (m - 1) * 30 + d;
@@ -70,7 +70,7 @@ export default function RestockInbound() {
             </div>
             <div className="mt-1 font-bold">#{d.id} · {summary(d)}</div>
             <div className="text-xs text-slate-500">
-              {carrierName(d.carrierId)} · hạng {d.grade} · {usd(d.cost)}
+              {carrierName(d.carrierId)} · hạng {d.grade} · {usdCents(d.cost)}
             </div>
             <div className="mt-2 h-2 w-full rounded-full bg-slate-200">
               <div className="h-2 rounded-full bg-blue-600" style={{ width: `${pct}%` }} />
@@ -78,7 +78,7 @@ export default function RestockInbound() {
             {d.carrierId !== 'express' && (
               <button onClick={() => dispatch('expediteDelivery', d.id)}
                 className="mt-2 w-full rounded-xl border border-slate-200 p-2 text-sm font-bold">
-                ⚡ Nâng lên Hỏa tốc · +{usd(express.fee - current.fee)} · về sớm 1 ngày
+                ⚡ Nâng lên Hỏa tốc · +{usdCents(express.fee - current.fee)} · về sớm 1 ngày
               </button>
             )}
           </div>

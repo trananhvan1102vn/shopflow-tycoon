@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { industries as IND, suppliers as SUP, calendar as CAL } from '@shopflow/data';
 import { wholesaleEnvMult, activeEvents } from '@shopflow/sim';
 import { useGame } from '../store';
-import { usd } from '../format';
+import { usdCents } from '../format';
 
 const SEASONAL_NAME: Record<string, string> = {
   valentine_gift: 'Gói quà Valentine',
@@ -62,7 +62,7 @@ export default function RestockBundles() {
           className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-sm font-bold shadow">
           {SUP.carriers.map((c: any) => (
             <option key={c.id} value={c.id}>
-              {c.name} {usd(c.fee)} · {c.daysDelta > 0 ? `+${c.daysDelta}n` : c.daysDelta < 0 ? `${c.daysDelta}n` : 'đúng hẹn'}
+              {c.name} {usdCents(c.fee)} · {c.daysDelta > 0 ? `+${c.daysDelta}n` : c.daysDelta < 0 ? `${c.daysDelta}n` : 'đúng hẹn'}
             </option>
           ))}
         </select>
@@ -103,9 +103,9 @@ export default function RestockBundles() {
               <div className="flex items-start justify-between gap-2">
                 <div className="font-bold">{locked ? '🔒 ' : ''}{b.name}</div>
                 <div className="shrink-0 text-right">
-                  <div className="font-bold text-emerald-700">{usd(Math.round(b.cost * env))}</div>
+                  <div className="font-bold text-emerald-700">{usdCents(Math.round(b.cost * env))}</div>
                   <div className="text-[11px] text-slate-500">
-                    + ship {usd(carrier.fee)} · {days === 0 ? 'về hôm nay' : `${days} ngày`}
+                    + ship {usdCents(carrier.fee)} · {days === 0 ? 'về hôm nay' : `${days} ngày`}
                   </div>
                 </div>
               </div>
@@ -116,7 +116,7 @@ export default function RestockBundles() {
               </div>
               <div className="mt-2 flex items-center justify-between gap-2">
                 <p className="text-xs text-slate-500">
-                  Bán hết thu ~<b className="text-slate-800">{usd(revenue)}</b> · lãi ≈ <b className="text-slate-800">{usd(revenue - cost)}</b>
+                  Bán hết thu ~<b className="text-slate-800">{usdCents(revenue)}</b> · lãi ≈ <b className="text-slate-800">{usdCents(revenue - cost)}</b>
                 </p>
                 {locked ? (
                   <span className="shrink-0 text-xs font-bold text-slate-500">Màn {b.unlockStage}</span>
@@ -153,8 +153,8 @@ function SeasonalCard({ seasonal, bundle, env, fee, bought, daysLeft, onBuy }: {
           <div className="text-xs text-slate-600">Áp cho {bundle.name} · giảm {Math.round(seasonal.discount * 100)}%</div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-xs text-slate-400 line-through">{usd(full)}</div>
-          <div className="text-xl font-bold text-orange-600">{usd(sale)}</div>
+          <div className="text-xs text-slate-400 line-through">{usdCents(full)}</div>
+          <div className="text-xl font-bold text-orange-600">{usdCents(sale)}</div>
         </div>
       </div>
       <button disabled={left <= 0} onClick={onBuy}

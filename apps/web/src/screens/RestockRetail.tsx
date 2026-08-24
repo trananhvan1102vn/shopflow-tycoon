@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { industries as IND, suppliers as SUP } from '@shopflow/data';
 import { retailUnitPrice, pendingAuditCapacity } from '@shopflow/sim';
 import { useGame } from '../store';
-import { usd } from '../format';
+import { usdCents } from '../format';
 
 const STEP = SUP.retail.moqLocal as number; // 5 — bậc nhảy đúng bằng MOQ nên mọi đơn đều hợp lệ
 const MAX = SUP.retail.maxPerOrder as number;
@@ -14,6 +14,8 @@ export default function RestockRetail() {
   const [industryId, setIndustryId] = useState<string | null>(null);
   const [carrierId, setCarrierId] = useState('standard');
   const [qty, setQty] = useState<Record<string, number>>({});
+  // Đổi ngành → xoá giỏ: nếu giữ lại, thanh tổng và nút Đặt hàng vẫn tính các sản phẩm không còn hiển thị.
+  useEffect(() => setQty({}), [industryId]);
   if (!game) return null;
 
   const owned = IND.industries.filter((i: any) => game.industries.includes(i.id));
@@ -100,8 +102,8 @@ export default function RestockRetail() {
               <div className="min-w-0 flex-1">
                 <div className="truncate font-bold">{locked ? '🔒 ' : ''}{p.name}</div>
                 <div className="text-xs text-slate-500">
-                  Tồn <b className={stock < 10 ? 'text-red-600' : 'text-slate-700'}>{stock}</b> · Bán {usd(p.retail)} ·
-                  {' '}Nhập lẻ <b className="text-slate-800">{usd(retailUnitPrice(game, p.id))}</b>
+                  Tồn <b className={stock < 10 ? 'text-red-600' : 'text-slate-700'}>{stock}</b> · Bán {usdCents(p.retail)} ·
+                  {' '}Nhập lẻ <b className="text-slate-800">{usdCents(retailUnitPrice(game, p.id))}</b>
                   {locked && ` · Màn ${p.unlockStage}`}
                 </div>
               </div>
@@ -120,8 +122,8 @@ export default function RestockRetail() {
       <div className="fixed inset-x-0 bottom-14 z-30 border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-md space-y-2 p-3">
           <div className="flex items-baseline justify-between text-xs text-slate-500">
-            <span>{units} món (hạng B) {usd(goods)} + ship {usd(ship)}</span>
-            <span className="text-base font-bold text-slate-900">{usd(goods + ship)}</span>
+            <span>{units} món (hạng B) {usdCents(goods)} + ship {usdCents(ship)}</span>
+            <span className="text-base font-bold text-slate-900">{usdCents(goods + ship)}</span>
           </div>
           {overCap && <p className="text-xs font-bold text-red-600">Khu chờ kiểm sắp đầy — cần thêm ô trống trong kho.</p>}
           <div className="flex gap-2">
@@ -130,7 +132,7 @@ export default function RestockRetail() {
               className="rounded-xl border border-slate-200 p-2 text-sm font-bold">
               {SUP.carriers.map((c: any) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} {usd(c.fee)} · {c.daysDelta > 0 ? `+${c.daysDelta} ngày` : c.daysDelta < 0 ? `${c.daysDelta} ngày` : 'đúng hẹn'}
+                  {c.name} {usdCents(c.fee)} · {c.daysDelta > 0 ? `+${c.daysDelta} ngày` : c.daysDelta < 0 ? `${c.daysDelta} ngày` : 'đúng hẹn'}
                 </option>
               ))}
             </select>
