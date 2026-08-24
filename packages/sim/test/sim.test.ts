@@ -21,7 +21,7 @@ describe('sim skeleton', () => {
   it('orderRate tăng khi mở thêm kênh', () => {
     const s = createGame(42, 'electronics');
     const base = orderRate(s, 'electronics', 40, 1);
-    s.channels.push({ id: 'mall', open: true, suspended: false, level: 1, ordersDelivered: 0 });
+    s.channels.push({ id: 'mall', open: true, suspended: false, ratingLocked: false, level: 1, ordersDelivered: 0 });
     expect(orderRate(s, 'electronics', 40, 1)).toBeGreaterThan(base * 2.5); // 1.0 + 1.5×1.3
   });
 });

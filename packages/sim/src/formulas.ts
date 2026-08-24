@@ -6,7 +6,7 @@ export function orderRate(s: GameState, industryId: string, seoScore: number, en
   const ind = IND.industries.find((i) => i.id === industryId)!;
   let channelSum = 0;
   for (const c of s.channels) {
-    if (!c.open || c.suspended) continue;
+    if (!c.open || c.suspended || c.ratingLocked) continue;
     const def = CH.channels.find((d) => d.id === c.id)!;
     let k = def.trafficK;
     if (c.level >= 2) k *= CH.levelBonus['2'].kMult;
@@ -21,7 +21,7 @@ export function orderRate(s: GameState, industryId: string, seoScore: number, en
 /** Trọng số gán đơn vào kênh (B5). */
 export function channelWeights(s: GameState, industryId: string): [string, number][] {
   return s.channels
-    .filter((c) => c.open && !c.suspended)
+    .filter((c) => c.open && !c.suspended && !c.ratingLocked)
     .map((c) => {
       const def = CH.channels.find((d) => d.id === c.id)!;
       const a = (CH.affinity as any)[industryId]?.[c.id] ?? 1;

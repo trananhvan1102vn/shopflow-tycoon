@@ -1,4 +1,4 @@
-import { industries as IND, suppliers as SUP, stages as ST, calendar as CAL } from '@shopflow/data';
+import { industries as IND, suppliers as SUP, stages as ST, calendar as CAL, channels as CH } from '@shopflow/data';
 import type { Cents, Delivery, GameState } from './types.js';
 import { wholesaleEnvMult } from './env.js';
 import { shelfCapacity } from './logistics.js';
@@ -157,4 +157,36 @@ export function expandGrid(s: GameState): GameState {
     cells[r * size + col] = c;
   });
   return ok({ ...s, money: s.money - next.cost, grid: { size, cells } });
+}
+
+export function openChannel(s: GameState, channelId: string): GameState {
+  const def = CH.channels.find((d) => d.id === channelId);
+  if (!def) return reject(s, 'Không có kênh này');
+  if (s.channels.some((c) => c.id === channelId)) return reject(s, 'Kênh đã mở');
+  if (def.unlockStage > s.stage) return reject(s, `Mở ở màn ${def.unlockStage}`);
+  if ((def as any).minRating && s.rating < (def as any).minRating)
+    return reject(s, `Cần Rating ≥ ${(def as any).minRating}`);
+  if (s.money < def.openCost) return reject(s, 'Không đủ tiền');
+  return ok({
+    ...s, money: s.money - def.openCost,
+    channels: [...s.channels, { id: channelId, open: true, suspended: false, ratingLocked: false, level: 1 as const, ordersDelivered: 0 }],
+  });
+}
+
+export function upgradeChannel(s: GameState, channelId: string): GameState {
+  const def = CH.channels.find((d) => d.id === channelId);
+  const st = s.channels.find((c) => c.id === channelId);
+  if (!def || !st) return reject(s, 'Kênh chưa mở');
+  if (st.level >= 3) return reject(s, 'Đã cấp tối đa');
+  const cost = def.openCost * CH.levelBonus[String(st.level + 1) as '2' | '3'].costMult;
+  if (s.money < cost) return reject(s, 'Không đủ tiền');
+  return ok({
+    ...s, money: s.money - cost,
+    channels: s.channels.map((c) => (c.id === channelId ? { ...c, level: (c.level + 1) as 2 | 3 } : c)),
+  });
+}
+
+export function setChannelOpen(s: GameState, channelId: string, open: boolean): GameState {
+  if (!s.channels.some((c) => c.id === channelId)) return reject(s, 'Kênh chưa mở');
+  return ok({ ...s, channels: s.channels.map((c) => (c.id === channelId ? { ...c, open } : c)) });
 }

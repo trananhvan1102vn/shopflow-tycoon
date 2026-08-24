@@ -20,11 +20,18 @@ export function settleDay(s: GameState): GameState {
     if (money >= c.fee) { money -= c.fee; channelFees += c.fee; return c; }
     return { ...c, suspended: true }; // thiếu tiền → tạm ngưng kênh có phí
   });
+  const rated = paid.map((c: any) => {
+    const def = CH.channels.find((d) => d.id === c.id)!;
+    if (!(def as any).minRating) return c;
+    if (s.rating < (def as any).minRating) return { ...c, ratingLocked: true };
+    if (c.ratingLocked && s.rating >= (def as any).minRating) return { ...c, ratingLocked: false };
+    return c;
+  });
   const report: DayReport = {
     day: s.clock.day, month: s.clock.month,
     revenueByChannel: {}, ordersByChannel: {}, commission: 0,
     channelFees, rent, maintenance, purchases: 0, other: 0,
     net: -(rent + maintenance + channelFees),
   };
-  return { ...s, money, channels: paid.map(({ fee, ...c }: any) => c), reports: [...s.reports, report] };
+  return { ...s, money, channels: rated.map(({ fee, ...c }: any) => c), reports: [...s.reports, report] };
 }

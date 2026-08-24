@@ -9,7 +9,7 @@ export interface Order {
   value: Cents; slaLeft: GameMinutes; state: 'queued' | 'packing' | 'waiting_stock';
 }
 
-export interface ChannelState { id: string; open: boolean; suspended: boolean; level: 1 | 2 | 3; ordersDelivered: number }
+export interface ChannelState { id: string; open: boolean; suspended: boolean; ratingLocked: boolean; level: 1 | 2 | 3; ordersDelivered: number }
 
 export interface Delivery {
   id: string; bundleId?: string; items: Record<string, number>; grade: 'A' | 'B' | 'C';

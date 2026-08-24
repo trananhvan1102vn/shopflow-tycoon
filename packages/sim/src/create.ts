@@ -10,7 +10,7 @@ export function createGame(seed: number, startIndustry: string): GameState {
     money: ST.startingMoney, rating: ST.rating.start, stage: 1, combo: 0, bestCombo: 0,
     industries: [startIndustry], seo: { [startIndustry]: UP.seoStart }, grid: { size, cells },
     inventory: {}, unchecked: 0, orders: [], deliveries: [],
-    channels: [{ id: 'flea', open: true, suspended: false, level: 1, ordersDelivered: 0 }],
+    channels: [{ id: 'flea', open: true, suspended: false, ratingLocked: false, level: 1, ordersDelivered: 0 }],
     relationships: {}, upgrades: [], marketCycle: 'stable', activeEvents: [],
     reports: [], completedOrders: 0,
     orderGenAccum: 0, packAccum: 0, orderSeq: 0, deliverySeq: 0,
