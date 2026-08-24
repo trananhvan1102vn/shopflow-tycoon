@@ -6,3 +6,4 @@ export { orderRate } from './formulas.js';
 export { genOrders } from './orders.js';
 export { makeRng } from './rng.js';
 export * from './env.js';
+export * from './actions.js';
