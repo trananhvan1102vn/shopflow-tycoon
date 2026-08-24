@@ -1,0 +1,46 @@
+{
+  "industries": [
+    { "id": "electronics", "name": "Phụ kiện điện tử", "V": 1.0, "avgOrderValue": 3500, "unlock": "start-option", "traits": { "returnRateBonus": 0.03 },
+      "products": [
+        { "id": "phone_case", "name": "Ốp lưng", "retail": 800,  "wholesale": 200 },
+        { "id": "cable",      "name": "Cáp sạc nhanh", "retail": 1600, "wholesale": 400 },
+        { "id": "power_bank", "name": "Sạc dự phòng", "retail": 4000, "wholesale": 1000 },
+        { "id": "earbuds",    "name": "Tai nghe", "retail": 6000, "wholesale": 1500, "unlockStage": 2 },
+        { "id": "watch",      "name": "Đồng hồ thông minh", "retail": 16000, "wholesale": 4000, "unlockStage": 2 } ],
+      "bundles": [
+        { "id": "starter", "name": "Starter Bundle", "cost": 6000,  "days": 1, "items": { "phone_case": 15, "cable": 10 }, "unlockStage": 1 },
+        { "id": "power",   "name": "Power Bundle",   "cost": 12000, "days": 2, "items": { "power_bank": 8, "cable": 12 }, "unlockStage": 1 },
+        { "id": "audio",   "name": "Audio Bundle",   "cost": 20000, "days": 2, "items": { "earbuds": 6, "watch": 3 }, "unlockStage": 2 },
+        { "id": "mega",    "name": "Mega Electronics","cost": 30000, "days": 3, "items": { "phone_case": 10, "cable": 10, "power_bank": 5, "earbuds": 3, "watch": 2 }, "unlockStage": 2 } ] },
+    { "id": "fashion", "name": "Thời trang", "V": 1.2, "avgOrderValue": 2800, "unlock": "start-option", "traits": { "seasonal": { "inSeason": 1.3, "offSeason": 0.6 } },
+      "products": [
+        { "id": "tshirt",   "name": "Áo thun", "retail": 2000, "wholesale": 500, "season": "SS" },
+        { "id": "socks",    "name": "Tất", "retail": 1000, "wholesale": 250 },
+        { "id": "hoodie",   "name": "Hoodie", "retail": 4000, "wholesale": 1000, "season": "FW" },
+        { "id": "jeans",    "name": "Jeans", "retail": 5000, "wholesale": 1200, "unlockStage": 2 },
+        { "id": "sneakers", "name": "Sneakers", "retail": 10000, "wholesale": 2500, "unlockStage": 2 } ],
+      "bundles": [
+        { "id": "casual", "name": "Casual Bundle", "cost": 10000, "days": 1, "items": { "tshirt": 15, "socks": 15 }, "unlockStage": 1 },
+        { "id": "winter", "name": "Winter Bundle", "cost": 16000, "days": 2, "items": { "hoodie": 8, "jeans": 8 }, "unlockStage": 1 },
+        { "id": "street", "name": "Street Bundle", "cost": 20000, "days": 2, "items": { "sneakers": 5, "hoodie": 6 }, "unlockStage": 2 },
+        { "id": "mega",   "name": "Mega Fashion",  "cost": 28000, "days": 3, "items": { "tshirt": 10, "jeans": 5, "sneakers": 3, "hoodie": 4, "socks": 10 }, "unlockStage": 2 } ] },
+    { "id": "home", "name": "Gia dụng & nhà bếp", "V": 0.6, "avgOrderValue": 8500, "unlock": "start-option", "traits": { "bulky": ["vacuum", "microwave", "purifier"], "bundleShipMult": 1.5 },
+      "products": [
+        { "id": "hairdryer", "name": "Máy sấy tóc", "retail": 2500, "wholesale": 600 },
+        { "id": "kettle",    "name": "Ấm siêu tốc", "retail": 3000, "wholesale": 800 },
+        { "id": "vacuum",    "name": "Máy hút bụi", "retail": 12000, "wholesale": 3000 },
+        { "id": "microwave", "name": "Lò vi sóng", "retail": 18000, "wholesale": 4500, "unlockStage": 2 },
+        { "id": "purifier",  "name": "Máy lọc không khí", "retail": 28000, "wholesale": 7000, "unlockStage": 2 } ],
+      "bundles": [
+        { "id": "kitchen",  "name": "Kitchen Bundle",  "cost": 20000, "days": 2, "items": { "kettle": 10, "microwave": 3 }, "unlockStage": 1 },
+        { "id": "cleaning", "name": "Cleaning Bundle", "cost": 22000, "days": 2, "items": { "vacuum": 5, "hairdryer": 10 }, "unlockStage": 1 },
+        { "id": "aircare",  "name": "Air Care Bundle", "cost": 30000, "days": 2, "items": { "hairdryer": 12, "purifier": 3 }, "unlockStage": 2 },
+        { "id": "mega",     "name": "Mega Home",       "cost": 50000, "days": 3, "items": { "kettle": 5, "vacuum": 3, "purifier": 2, "microwave": 2, "hairdryer": 5 }, "unlockStage": 2 } ] },
+    { "id": "books",  "name": "Sách & VPP", "V": 1.5, "avgOrderValue": 1600, "unlock": 4, "traits": {}, "products": [], "bundles": [] },
+    { "id": "toys",   "name": "Đồ chơi & Giải trí", "V": 0.8, "avgOrderValue": 4200, "unlock": 5, "traits": { "eventSpike": 3.5 }, "products": [], "bundles": [] },
+    { "id": "beauty", "name": "Mỹ phẩm", "V": 1.1, "avgOrderValue": 3000, "unlock": 6, "traits": { "perishableDays": 90 }, "products": [], "bundles": [] },
+    { "id": "sports", "name": "Thể thao", "V": 0.8, "avgOrderValue": 3800, "unlock": 6, "traits": { "summerMult": 1.2 }, "products": [], "bundles": [] },
+    { "id": "pets",   "name": "Thú cưng", "V": 1.0, "avgOrderValue": 2600, "unlock": 6, "traits": { "loyaltyRatingPerOrder": 0.03, "foodPerishableDays": 120 }, "products": [], "bundles": [] }
+  ],
+  "_note": "V = tốc độ có đơn cơ bản (spec B1). Ngành 4–8: điền products/bundles ở M2."
+}

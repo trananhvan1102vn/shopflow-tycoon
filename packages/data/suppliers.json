@@ -1,0 +1,14 @@
+{
+  "tiers": [
+    { "id": "local",    "name": "Nội địa",           "costMult": 1.00, "extraDays": 0, "grades": ["A", "B"], "gradesStage1": ["B"], "risk": null, "unlockStage": 1 },
+    { "id": "regional", "name": "Nhập khẩu khu vực", "costMult": 0.80, "extraDays": 2, "grades": ["A", "B", "C"], "risk": { "delayChance": 0.05, "delayDays": 1 }, "unlockStage": 2 },
+    { "id": "overseas", "name": "Nhập khẩu xa",      "costMult": 0.65, "extraDays": 4, "grades": ["B", "C"], "risk": { "customsChance": 0.10, "customsDays": 2, "lossChance": 0.03, "lossPct": 0.10 }, "unlockStage": 3 }
+  ],
+  "grades": { "A": { "costMult": 1.10, "returnRate": 0.01 }, "B": { "costMult": 1.00, "returnRate": 0.04 }, "C": { "costMult": 0.85, "returnRate": 0.10 } },
+  "relationship": { "xpPerCents": 10000, "levels": [ { "xp": 0 }, { "xp": 10, "discount": 0.03 }, { "xp": 30, "discount": 0.06, "exclusiveBundle": true }, { "xp": 80, "discount": 0.10, "daysDelta": -1 }, { "xp": 200, "discount": 0.15, "crisisImmune": true } ], "decayAfterIdleDays": 30 },
+  "carriers": [
+    { "id": "economy",  "name": "Economy",  "fee": 1200, "daysDelta": 1 },
+    { "id": "standard", "name": "Standard", "fee": 2000, "daysDelta": 0 },
+    { "id": "express",  "name": "Express",  "fee": 4000, "daysDelta": -1 } ],
+  "retail": { "priceMult": 1.2, "moqLocal": 5, "moqImport": 20, "maxPerOrder": 100 }
+}

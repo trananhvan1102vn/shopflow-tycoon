@@ -1,0 +1,2 @@
+{ "name": "@shopflow/web", "version": "0.0.1", "private": true,
+  "scripts": { "dev": "echo 'M1: khoi tao Vite React tai day (xem README-SETUP.md)'", "test": "echo skip" } }

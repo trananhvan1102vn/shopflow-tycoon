@@ -1,0 +1,9 @@
+{
+  "warehouseRentPerCellPerDay": 200,
+  "maintenancePerEquipmentLevelPerDay": 100,
+  "automationDailyFee": 800,
+  "seoDecayPerDay": 1, "seoDecayFromStage": 3, "seoFloor": 40,
+  "settleHour": 0,
+  "onUnpaidFees": "suspendPaidChannels",
+  "_note": "Cent. Kết toán settleDay() lúc 00:00 → Báo cáo cuối ngày (màn C10)."
+}

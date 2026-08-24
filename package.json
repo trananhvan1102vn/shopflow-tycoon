@@ -1,0 +1,13 @@
+{
+  "name": "shopflow-tycoon",
+  "private": true,
+  "scripts": {
+    "test": "pnpm -r test",
+    "dev": "pnpm --filter @shopflow/web dev",
+    "typecheck": "pnpm -r exec tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  }
+}

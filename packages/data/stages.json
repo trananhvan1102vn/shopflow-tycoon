@@ -1,0 +1,25 @@
+{
+  "startingMoney": 100000,
+  "tutorialReward": 20000,
+  "stages": [
+    { "n": 1, "goal": { "money": 160000,   "orders": 50,   "rating": 3.5 }, "reward": 40000,   "sla": 1440, "queueCap": 20,
+      "unlocks": ["industry-choice-1", "retail-restock", "bundles-basic", "shelf", "packer", "supplier-local", "channel-flea"] },
+    { "n": 2, "goal": { "money": 600000,   "orders": 150,  "rating": 4.0 }, "reward": 120000,  "sla": 1440, "queueCap": 30,
+      "unlocks": ["industry-choice-2", "channel-mall", "robot", "seo-1-2", "supplier-regional", "grades", "calendar", "seasonal-bundles", "grid-4x4", "carriers-all"] },
+    { "n": 3, "goal": { "money": 2000000,  "orders": 400,  "rating": 4.2 }, "reward": 400000,  "sla": 1080, "queueCap": 40,
+      "unlocks": ["industry-choice-3", "channel-social", "supplier-overseas", "relationship", "upgrades", "market-cycle", "seo-3", "equipment-l2", "speed-2x"] },
+    { "n": 4, "goal": { "money": 6000000,  "orders": 800,  "rating": 4.5 }, "reward": 1200000, "sla": 720, "queueCap": 50,
+      "unlocks": ["industry-choice-4", "channel-website", "custom-pricing", "random-events", "grid-5x5", "robot-l2"] },
+    { "n": 5, "goal": { "money": 16000000, "orders": 1500, "rating": 4.7 }, "reward": 4000000, "sla": 720, "queueCap": 60,
+      "unlocks": ["industry-choice-5", "automation", "equipment-l3", "grid-6x6", "achievements"] },
+    { "n": 6, "goal": null, "unlocks": ["industries-6-8-purchasable", "leaderboard"] }
+  ],
+  "combo": { "ordersPerStep": 10, "bonusPerStep": 0.05, "maxBonus": 0.5 },
+  "rating": { "start": 4.0, "perDelivered": 0.02, "perCancelled": -0.1, "perCancelledWithCS": -0.05, "min": 1, "max": 5, "trafficFormula": "0.6 + 0.1 * rating" },
+  "warehouse": {
+    "grids": [ { "size": 3, "cost": 0 }, { "size": 4, "cost": 40000, "unlockStage": 2 }, { "size": 5, "cost": 120000, "unlockStage": 4 }, { "size": 6, "cost": 400000, "unlockStage": 5 } ],
+    "shelf":  { "place": 4000,  "levels": [ { "cap": 100 }, { "cap": 200, "cost": 20000, "unlockStage": 3 }, { "cap": 400, "cost": 60000, "unlockStage": 5 } ] },
+    "packer": { "place": 8000,  "levels": [ { "speed": 1.0 }, { "speed": 2.0, "cost": 40000, "unlockStage": 3 }, { "speed": 4.0, "cost": 80000, "unlockStage": 5 } ] },
+    "robot":  { "place": 12000, "levels": [ { "speed": 0.5 }, { "speed": 1.0, "cost": 40000, "unlockStage": 4 }, { "speed": 2.5, "cost": 100000, "unlockStage": 5 } ], "adjacentShelfBonus": 0.25, "unlockStage": 2 },
+    "demolish": 1000, "uncheckedPerEmptyCell": 500, "auditPerPackerSpeedPerHour": 20 }
+}

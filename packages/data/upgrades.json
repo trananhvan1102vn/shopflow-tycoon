@@ -1,0 +1,12 @@
+{
+  "upgrades": [
+    { "id": "routing",    "name": "Định Tuyến Vận Tải",   "cost": 16000,  "effect": { "deliveryDaysMult": 0.7 } },
+    { "id": "seo_pro",    "name": "Đột Phá SEO",          "cost": 30000,  "effect": { "trafficMult": 1.3 } },
+    { "id": "robot_fast", "name": "Robot Siêu Tốc",       "cost": 50000,  "effect": { "robotSpeedMult": 1.5 } },
+    { "id": "cs",         "name": "CSKH Chuyên Nghiệp",   "cost": 60000,  "effect": { "cancelPenaltyHalf": true, "ratingRegenPerHour": 0.01 } },
+    { "id": "wholesale",  "name": "Hợp Đồng Sỉ",          "cost": 100000, "effect": { "wholesaleMult": 0.85 } },
+    { "id": "negotiator", "name": "Đàm Phán Kênh",        "cost": 80000,  "effect": { "commissionDelta": -0.02 } }
+  ],
+  "seoCampaigns": [ { "level": 1, "cost": 16000, "score": 55 }, { "level": 2, "cost": 40000, "score": 70 }, { "level": 3, "cost": 80000, "score": 85, "unlockStage": 3 } ],
+  "seoStart": 40
+}
