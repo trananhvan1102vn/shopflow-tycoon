@@ -84,3 +84,23 @@ export function buyBundle(s: GameState, industryId: string, bundleId: string, ca
   const r = makeDelivery({ ...s, seasonalBought }, bundle.items as Record<string, number>, cost, carrierId, bundle.days);
   return ok(r.s);
 }
+
+export function expediteDelivery(s: GameState, deliveryId: string): GameState {
+  const d = s.deliveries.find((x) => x.id === deliveryId);
+  if (!d || d.state !== 'shipping') return reject(s, 'Lô hàng không thể nâng cấp');
+  if (d.carrierId === 'express') return reject(s, 'Đã là Hỏa tốc');
+  const express = SUP.carriers.find((c) => c.id === 'express')!;
+  const current = SUP.carriers.find((c) => c.id === d.carrierId)!;
+  const extra = express.fee - current.fee;
+  if (s.money < extra) return reject(s, 'Không đủ tiền');
+  const daysLeft = d.daysLeft - 1;
+  const arrived = daysLeft <= 0;
+  const deliveries = s.deliveries.map((x) =>
+    x.id === deliveryId
+      ? { ...x, carrierId: 'express', daysLeft: Math.max(0, daysLeft), state: arrived ? ('auditing' as const) : ('shipping' as const) }
+      : x);
+  return ok({
+    ...s, money: s.money - extra, dayPurchases: s.dayPurchases + extra, deliveries,
+    unchecked: arrived ? s.unchecked + d.itemsTotal : s.unchecked,
+  });
+}

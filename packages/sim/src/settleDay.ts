@@ -1,8 +1,10 @@
 import { channels as CH, costs as CO } from '@shopflow/data';
 import type { GameState, DayReport } from './types.js';
+import { advanceShipping } from './logistics.js';
 
 /** Kết toán 00:00 (spec B6). TODO M1: cộng revenue/commission tích lũy trong ngày. */
 export function settleDay(s: GameState): GameState {
+  s = advanceShipping(s);
   const equipment = s.grid.cells.filter((c): c is { type: 'shelf' | 'packer' | 'robot'; level: 1 | 2 | 3 } => !!c && c.type !== 'pile');
   const rent = CO.warehouseRentPerCellPerDay * s.grid.size * s.grid.size;
   const maintenance = equipment.reduce((sum, e) => sum + CO.maintenancePerEquipmentLevelPerDay * e.level, 0);
