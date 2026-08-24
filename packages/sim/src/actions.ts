@@ -1,4 +1,4 @@
-import { industries as IND, suppliers as SUP, stages as ST, calendar as CAL, channels as CH } from '@shopflow/data';
+import { industries as IND, suppliers as SUP, stages as ST, calendar as CAL, channels as CH, upgrades as UP } from '@shopflow/data';
 import type { Cents, Delivery, GameState } from './types.js';
 import { wholesaleEnvMult } from './env.js';
 import { shelfCapacity } from './logistics.js';
@@ -189,4 +189,23 @@ export function upgradeChannel(s: GameState, channelId: string): GameState {
 export function setChannelOpen(s: GameState, channelId: string, open: boolean): GameState {
   if (!s.channels.some((c) => c.id === channelId)) return reject(s, 'Kênh chưa mở');
   return ok({ ...s, channels: s.channels.map((c) => (c.id === channelId ? { ...c, open } : c)) });
+}
+
+export function buySeo(s: GameState, industryId: string): GameState {
+  if (!s.industries.includes(industryId)) return reject(s, 'Ngành chưa mở');
+  if (s.stage < 2) return reject(s, 'SEO mở ở màn 2');
+  const current = s.seo[industryId] ?? UP.seoStart;
+  const next = UP.seoCampaigns.find((c) => c.score > current);
+  if (!next) return reject(s, 'SEO đã tối đa');
+  if (((next as any).unlockStage ?? 1) > s.stage) return reject(s, `Cấp ${next.level} mở ở màn ${(next as any).unlockStage}`);
+  if (s.money < next.cost) return reject(s, 'Không đủ tiền');
+  return ok({ ...s, money: s.money - next.cost, seo: { ...s.seo, [industryId]: next.score } });
+}
+
+export function chooseIndustry(s: GameState, industryId: string): GameState {
+  const ind = IND.industries.find((i) => i.id === industryId);
+  if (!ind || ind.unlock !== 'start-option') return reject(s, 'Ngành này chưa thể mở');
+  if (s.industries.includes(industryId)) return reject(s, 'Ngành đã mở');
+  if (s.industries.length >= s.stage) return reject(s, 'Chưa mở thêm ngành ở màn này');
+  return ok({ ...s, industries: [...s.industries, industryId], seo: { ...s.seo, [industryId]: UP.seoStart } });
 }
