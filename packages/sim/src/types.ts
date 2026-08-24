@@ -14,7 +14,7 @@ export interface ChannelState { id: string; open: boolean; suspended: boolean; l
 export interface Delivery {
   id: string; bundleId?: string; items: Record<string, number>; grade: 'A' | 'B' | 'C';
   supplierId: string; carrierId: string; cost: Cents;
-  state: 'shipping' | 'auditing'; daysLeft: number; auditLeft: GameMinutes;
+  state: 'shipping' | 'auditing'; daysLeft: number; itemsTotal: number; itemsChecked: number;
 }
 
 export interface DayReport {
@@ -34,4 +34,11 @@ export interface GameState {
   relationships: Record<string, { xp: number; lastPurchaseDay: number }>;
   upgrades: string[]; marketCycle: string; activeEvents: string[];
   reports: DayReport[]; completedOrders: number;
+  orderGenAccum: GameMinutes; packAccum: number;
+  orderSeq: number; deliverySeq: number;
+  dayRevenue: Record<string, Cents>; dayOrders: Record<string, number>;
+  dayCommission: Cents; dayPurchases: Cents;
+  onTimeStreak: number; stageComplete: boolean;
+  seasonalBought: Record<string, number>;
+  lastReject: string | null;
 }
