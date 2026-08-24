@@ -19,12 +19,12 @@ export function pendingAuditCapacity(s: GameState): number {
 
 export function retailUnitPrice(s: GameState, productId: string): Cents {
   const f = findProduct(productId)!;
-  const tier = SUP.tiers.find((t) => t.id === 'local')!;
+  const tier = SUP.tiers.find((t: any) => t.id === 'local')!;
   return Math.round(f.p.wholesale * SUP.retail.priceMult * tier.costMult * SUP.grades.B.costMult);
 }
 
 function makeDelivery(s: GameState, items: Record<string, number>, cost: Cents, carrierId: string, baseDays: number): { s: GameState; d: Delivery } {
-  const carrier = SUP.carriers.find((c) => c.id === carrierId)!;
+  const carrier = SUP.carriers.find((c: any) => c.id === carrierId)!;
   const daysLeft = Math.max(0, baseDays + carrier.daysDelta);
   const itemsTotal = Object.values(items).reduce((a, b) => a + b, 0);
   const d: Delivery = {
@@ -46,7 +46,7 @@ export function buyRetail(s: GameState, productId: string, qty: number, carrierI
   if (((f.p as any).unlockStage ?? 1) > s.stage) return reject(s, `Mở ở màn ${(f.p as any).unlockStage}`);
   if (qty < SUP.retail.moqLocal) return reject(s, `Tối thiểu ${SUP.retail.moqLocal} sản phẩm`);
   if (qty > SUP.retail.maxPerOrder) return reject(s, `Tối đa ${SUP.retail.maxPerOrder} sản phẩm/lần`);
-  const carrier = SUP.carriers.find((c) => c.id === carrierId);
+  const carrier = SUP.carriers.find((c: any) => c.id === carrierId);
   if (!carrier) return reject(s, 'Chưa chọn hãng vận chuyển');
   const cost = retailUnitPrice(s, productId) * qty + carrier.fee;
   if (s.money < cost) return reject(s, 'Không đủ tiền');
@@ -56,18 +56,18 @@ export function buyRetail(s: GameState, productId: string, qty: number, carrierI
 }
 
 export function buyBundle(s: GameState, industryId: string, bundleId: string, carrierId: string, seasonalId?: string): GameState {
-  const ind = IND.industries.find((i) => i.id === industryId);
+  const ind = IND.industries.find((i: any) => i.id === industryId);
   if (!ind || !s.industries.includes(industryId)) return reject(s, 'Ngành chưa mở');
-  const bundle = ind.bundles.find((b) => b.id === bundleId);
+  const bundle = ind.bundles.find((b: any) => b.id === bundleId);
   if (!bundle) return reject(s, 'Không có gói này');
   if (bundle.unlockStage > s.stage) return reject(s, `Mở ở màn ${bundle.unlockStage}`);
-  const carrier = SUP.carriers.find((c) => c.id === carrierId);
+  const carrier = SUP.carriers.find((c: any) => c.id === carrierId);
   if (!carrier) return reject(s, 'Chưa chọn hãng vận chuyển');
   let cost = bundle.cost * wholesaleEnvMult(s.clock, industryId);
   let seasonalBought = s.seasonalBought;
   if (seasonalId) {
     if (s.stage < 2) return reject(s, 'Gói mùa mở ở màn 2');
-    const sb = CAL.seasonalBundles.find((x) => x.id === seasonalId);
+    const sb = CAL.seasonalBundles.find((x: any) => x.id === seasonalId);
     if (!sb) return reject(s, 'Không có gói mùa này');
     const [[fm, fd], [tm, td]] = sb.window;
     const a = s.clock.month * 100 + s.clock.day;
@@ -90,8 +90,8 @@ export function expediteDelivery(s: GameState, deliveryId: string): GameState {
   const d = s.deliveries.find((x) => x.id === deliveryId);
   if (!d || d.state !== 'shipping') return reject(s, 'Lô hàng không thể nâng cấp');
   if (d.carrierId === 'express') return reject(s, 'Đã là Hỏa tốc');
-  const express = SUP.carriers.find((c) => c.id === 'express')!;
-  const current = SUP.carriers.find((c) => c.id === d.carrierId)!;
+  const express = SUP.carriers.find((c: any) => c.id === 'express')!;
+  const current = SUP.carriers.find((c: any) => c.id === d.carrierId)!;
   const extra = express.fee - current.fee;
   if (s.money < extra) return reject(s, 'Không đủ tiền');
   const daysLeft = d.daysLeft - 1;
@@ -146,7 +146,7 @@ export function removeEquipment(s: GameState, cellIndex: number): GameState {
 }
 
 export function expandGrid(s: GameState): GameState {
-  const next = ST.warehouse.grids.find((g) => g.size === s.grid.size + 1);
+  const next = ST.warehouse.grids.find((g: any) => g.size === s.grid.size + 1);
   if (!next) return reject(s, 'Đã là kho lớn nhất');
   if ((next as any).unlockStage > s.stage) return reject(s, `Mở ở màn ${(next as any).unlockStage}`);
   if (s.money < next.cost) return reject(s, 'Không đủ tiền');
@@ -160,7 +160,7 @@ export function expandGrid(s: GameState): GameState {
 }
 
 export function openChannel(s: GameState, channelId: string): GameState {
-  const def = CH.channels.find((d) => d.id === channelId);
+  const def = CH.channels.find((d: any) => d.id === channelId);
   if (!def) return reject(s, 'Không có kênh này');
   if (s.channels.some((c) => c.id === channelId)) return reject(s, 'Kênh đã mở');
   if (def.unlockStage > s.stage) return reject(s, `Mở ở màn ${def.unlockStage}`);
@@ -174,7 +174,7 @@ export function openChannel(s: GameState, channelId: string): GameState {
 }
 
 export function upgradeChannel(s: GameState, channelId: string): GameState {
-  const def = CH.channels.find((d) => d.id === channelId);
+  const def = CH.channels.find((d: any) => d.id === channelId);
   const st = s.channels.find((c) => c.id === channelId);
   if (!def || !st) return reject(s, 'Kênh chưa mở');
   if (st.level >= 3) return reject(s, 'Đã cấp tối đa');
@@ -197,7 +197,7 @@ export function buySeo(s: GameState, industryId: string): GameState {
   if (!s.industries.includes(industryId)) return reject(s, 'Ngành chưa mở');
   if (s.stage < 2) return reject(s, 'SEO mở ở màn 2');
   const current = s.seo[industryId] ?? UP.seoStart;
-  const next = UP.seoCampaigns.find((c) => c.score > current);
+  const next = UP.seoCampaigns.find((c: any) => c.score > current);
   if (!next) return reject(s, 'SEO đã tối đa');
   if (((next as any).unlockStage ?? 1) > s.stage) return reject(s, `Cấp ${next.level} mở ở màn ${(next as any).unlockStage}`);
   if (s.money < next.cost) return reject(s, 'Không đủ tiền');
@@ -205,7 +205,7 @@ export function buySeo(s: GameState, industryId: string): GameState {
 }
 
 export function chooseIndustry(s: GameState, industryId: string): GameState {
-  const ind = IND.industries.find((i) => i.id === industryId);
+  const ind = IND.industries.find((i: any) => i.id === industryId);
   if (!ind || ind.unlock !== 'start-option') return reject(s, 'Ngành này chưa thể mở');
   if (s.industries.includes(industryId)) return reject(s, 'Ngành đã mở');
   if (s.industries.length >= s.stage) return reject(s, 'Chưa mở thêm ngành ở màn này');

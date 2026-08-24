@@ -8,7 +8,7 @@ Mockup: `docs/demo-screens/` + canvas https://claude.ai/code/artifact/0a90f645-d
 1. Node ≥ 20, pnpm ≥ 9 (`npm i -g pnpm`)
 2. `pnpm install`
 3. `pnpm test` — chạy unit test sim + harness cân bằng
-4. `pnpm dev` — chạy web app (Vite, sẽ tạo ở M1)
+4. `pnpm dev` — chạy web app thật (Vite + React, đã có từ M1)
 
 ## Cấu trúc
 ```
@@ -25,4 +25,4 @@ docs            # kịch bản + mockup PNG
 - Mọi PR chạy `pnpm test`; harness fail nếu màn 1 lệch khỏi 15–25 phút.
 
 ## Lộ trình
-M0 scaffold (đây) → M1 sim màn 1–2 + UI Kho/Nhập/Bán hàng → M2 đủ 6 màn + sự kiện → M3 Capacitor iOS/Android + cloud save → M4 beta → M5 launch.
+M0 scaffold ✅ → M1 sim màn 1–2 + UI Kho/Nhập/Bán hàng ✅ (hoàn thành 2026-08-24) → M2 đủ 6 màn + sự kiện → M3 Capacitor iOS/Android + cloud save → M4 beta → M5 launch.

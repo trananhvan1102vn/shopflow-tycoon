@@ -7,7 +7,7 @@ const inRange = (m: number, d: number, from: number[], to: number[]) =>
   m * 100 + d >= from[0] * 100 + from[1] && m * 100 + d <= to[0] * 100 + to[1];
 
 export function activeEvents(month: number, day: number): CalEvent[] {
-  return CAL.events.filter((e) => inRange(month, day, e.from, e.to));
+  return CAL.events.filter((e: any) => inRange(month, day, e.from, e.to));
 }
 
 const hits = (e: CalEvent, industryId: string) =>

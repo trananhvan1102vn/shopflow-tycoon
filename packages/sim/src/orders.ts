@@ -16,7 +16,7 @@ export function genOrders(s: GameState, rng: Rng): GameState {
   const orders = [...s.orders];
   let seq = s.orderSeq;
   for (const indId of s.industries) {
-    const ind = IND.industries.find((i) => i.id === indId)!;
+    const ind = IND.industries.find((i: any) => i.id === indId)!;
     const weights = channelWeights(s, indId);
     if (!weights.length) continue;
     const env = trafficEnvMult(s.clock, indId) * hourMult(s.clock.minute);

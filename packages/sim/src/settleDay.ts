@@ -11,7 +11,7 @@ export function settleDay(s: GameState): GameState {
   let channelFees = 0;
   const channels = s.channels.map((c) => {
     if (!c.open) return c;
-    const def = CH.channels.find((d) => d.id === c.id)!;
+    const def = CH.channels.find((d: any) => d.id === c.id)!;
     return { ...c, suspended: false, fee: def.dailyFee } as typeof c & { fee: number };
   });
   let money = s.money - rent - maintenance;
@@ -21,7 +21,7 @@ export function settleDay(s: GameState): GameState {
     return { ...c, suspended: true }; // thiếu tiền → tạm ngưng kênh có phí
   });
   const rated = paid.map((c: any) => {
-    const def = CH.channels.find((d) => d.id === c.id)!;
+    const def = CH.channels.find((d: any) => d.id === c.id)!;
     if (!(def as any).minRating) return c;
     if (s.rating < (def as any).minRating) return { ...c, ratingLocked: true };
     if (c.ratingLocked && s.rating >= (def as any).minRating) return { ...c, ratingLocked: false };

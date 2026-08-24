@@ -10,7 +10,7 @@ function botAct(s: GameState): GameState {
   // Chỉ nâng khi còn đệm tiền cho kệ/bàn và nhập hàng — nếu không đủ thì làm việc khác trước.
   const flea = s.channels.find((c) => c.id === 'flea')!;
   if (flea.level < 3) {
-    const fleaDef = CH.channels.find((d) => d.id === 'flea')! as { upgradeCostBase?: number; openCost: number };
+    const fleaDef = CH.channels.find((d: any) => d.id === 'flea')! as { upgradeCostBase?: number; openCost: number };
     const upCost = (fleaDef.upgradeCostBase ?? fleaDef.openCost) * CH.levelBonus[String(flea.level + 1) as '2' | '3'].costMult;
     if (s.money >= upCost + 30000) return upgradeChannel(s, 'flea');
   }

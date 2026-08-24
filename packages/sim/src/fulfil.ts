@@ -32,7 +32,7 @@ export const comboBonus = (streak: number): number =>
   Math.min(Math.floor(streak / ST.combo.ordersPerStep) * ST.combo.bonusPerStep, ST.combo.maxBonus);
 
 export function commissionOf(s: GameState, channelId: string): number {
-  const def = CH.channels.find((d) => d.id === channelId)!;
+  const def = CH.channels.find((d: any) => d.id === channelId)!;
   const st = s.channels.find((c) => c.id === channelId);
   let com = def.commission;
   if (st && st.level >= 3) com += CH.levelBonus['3'].commissionDelta;
