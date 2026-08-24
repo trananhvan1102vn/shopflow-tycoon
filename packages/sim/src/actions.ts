@@ -1,6 +1,7 @@
 import { industries as IND, suppliers as SUP, stages as ST, calendar as CAL } from '@shopflow/data';
 import type { Cents, Delivery, GameState } from './types.js';
 import { wholesaleEnvMult } from './env.js';
+import { shelfCapacity } from './logistics.js';
 
 const ok = (s: GameState): GameState => ({ ...s, lastReject: null });
 const reject = (s: GameState, msg: string): GameState => ({ ...s, lastReject: msg });
@@ -103,4 +104,57 @@ export function expediteDelivery(s: GameState, deliveryId: string): GameState {
     ...s, money: s.money - extra, dayPurchases: s.dayPurchases + extra, deliveries,
     unchecked: arrived ? s.unchecked + d.itemsTotal : s.unchecked,
   });
+}
+
+export function placeEquipment(s: GameState, cellIndex: number, type: 'shelf' | 'packer' | 'robot'): GameState {
+  if (cellIndex < 0 || cellIndex >= s.grid.cells.length) return reject(s, 'Ô không hợp lệ');
+  if (s.grid.cells[cellIndex] !== null) return reject(s, 'Ô đã có thiết bị');
+  const def = ST.warehouse[type];
+  if ((def as any).unlockStage && (def as any).unlockStage > s.stage)
+    return reject(s, `Mở ở màn ${(def as any).unlockStage}`);
+  if (s.money < def.place) return reject(s, 'Không đủ tiền');
+  const cells = [...s.grid.cells];
+  cells[cellIndex] = { type, level: 1 };
+  return ok({ ...s, money: s.money - def.place, grid: { ...s.grid, cells } });
+}
+
+export function upgradeEquipment(s: GameState, cellIndex: number): GameState {
+  const cell = s.grid.cells[cellIndex];
+  if (!cell || cell.type === 'pile') return reject(s, 'Không có thiết bị ở ô này');
+  const levels = ST.warehouse[cell.type].levels as { cost?: number; unlockStage?: number }[];
+  const nextLv = levels[cell.level]; // level là 1-based, mảng 0-based → phần tử kế
+  if (!nextLv) return reject(s, 'Đã cấp tối đa');
+  if ((nextLv.unlockStage ?? 1) > s.stage) return reject(s, `Mở ở màn ${nextLv.unlockStage}`);
+  if (s.money < (nextLv.cost ?? 0)) return reject(s, 'Không đủ tiền');
+  const cells = [...s.grid.cells];
+  cells[cellIndex] = { ...cell, level: (cell.level + 1) as 2 | 3 };
+  return ok({ ...s, money: s.money - (nextLv.cost ?? 0), grid: { ...s.grid, cells } });
+}
+
+export function removeEquipment(s: GameState, cellIndex: number): GameState {
+  const cell = s.grid.cells[cellIndex];
+  if (!cell || cell.type === 'pile') return reject(s, 'Không có thiết bị ở ô này');
+  if (s.money < ST.warehouse.demolish) return reject(s, 'Không đủ tiền');
+  if (cell.type === 'shelf') {
+    const stock = Object.values(s.inventory).reduce((a, b) => a + b, 0);
+    const capAfter = shelfCapacity(s) - ST.warehouse.shelf.levels[cell.level - 1].cap;
+    if (stock > capAfter) return reject(s, 'Kệ còn hàng — bán bớt trước khi gỡ');
+  }
+  const cells = [...s.grid.cells];
+  cells[cellIndex] = null;
+  return ok({ ...s, money: s.money - ST.warehouse.demolish, grid: { ...s.grid, cells } });
+}
+
+export function expandGrid(s: GameState): GameState {
+  const next = ST.warehouse.grids.find((g) => g.size === s.grid.size + 1);
+  if (!next) return reject(s, 'Đã là kho lớn nhất');
+  if ((next as any).unlockStage > s.stage) return reject(s, `Mở ở màn ${(next as any).unlockStage}`);
+  if (s.money < next.cost) return reject(s, 'Không đủ tiền');
+  const size = next.size;
+  const cells = Array<(typeof s.grid.cells)[number]>(size * size).fill(null);
+  s.grid.cells.forEach((c, i) => {
+    const r = Math.floor(i / s.grid.size), col = i % s.grid.size;
+    cells[r * size + col] = c;
+  });
+  return ok({ ...s, money: s.money - next.cost, grid: { size, cells } });
 }
