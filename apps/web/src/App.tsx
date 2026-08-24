@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useGame } from './store';
 import IndustrySelect from './screens/IndustrySelect';
 import Warehouse from './screens/Warehouse';
+import Restock from './screens/Restock';
 import Hud from './components/Hud';
 import TabBar, { type Tab } from './components/TabBar';
 import Toast from './components/Toast';
 
 /** Placeholder cho các màn sẽ làm ở task sau. */
-const PLACEHOLDERS: Record<Exclude<Tab, 'kho'>, string> = {
-  nhap: '🚚 Nhập hàng — sắp có',
+const PLACEHOLDERS: Record<Exclude<Tab, 'kho' | 'nhap'>, string> = {
   ban: '🛍️ Bán hàng — sắp có',
   quangba: '🔍 Quảng bá — sắp có',
   them: '🔒 Mở ở màn 3',
@@ -28,6 +28,8 @@ export default function App() {
       <main className="mx-auto max-w-md p-4 pb-24">
         {tab === 'kho' ? (
           <Warehouse />
+        ) : tab === 'nhap' ? (
+          <Restock />
         ) : (
           <div className="rounded-xl bg-white p-8 text-center text-slate-500 shadow">{PLACEHOLDERS[tab]}</div>
         )}
