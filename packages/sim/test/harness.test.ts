@@ -1,13 +1,19 @@
 import { describe, it, expect } from 'vitest';
+import { channels as CH } from '@shopflow/data';
 import { createGame, tick, makeRng, retailUnitPrice } from '../src/index.js';
 import { buyRetail, buyBundle, placeEquipment, upgradeChannel } from '../src/actions.js';
 import type { GameState } from '../src/types.js';
 
 /** Bot màn 1: chiến lược đơn giản của người chơi biết chơi (spec Phần E). */
 function botAct(s: GameState): GameState {
-  // Kênh: nâng Chợ Trời lên cấp 3 (openCost 0 → miễn phí ở màn 1): traffic ×1.875, hoa hồng 12% → 11%
+  // Kênh: nâng Chợ Trời lên cấp 3 ($50 + $100): traffic ×1.875, hoa hồng 12% → 11%.
+  // Chỉ nâng khi còn đệm tiền cho kệ/bàn và nhập hàng — nếu không đủ thì làm việc khác trước.
   const flea = s.channels.find((c) => c.id === 'flea')!;
-  if (flea.level < 3) return upgradeChannel(s, 'flea');
+  if (flea.level < 3) {
+    const fleaDef = CH.channels.find((d) => d.id === 'flea')! as { upgradeCostBase?: number; openCost: number };
+    const upCost = (fleaDef.upgradeCostBase ?? fleaDef.openCost) * CH.levelBonus[String(flea.level + 1) as '2' | '3'].costMult;
+    if (s.money >= upCost + 30000) return upgradeChannel(s, 'flea');
+  }
   // Thiết bị: 1 kệ (bắt buộc để kiểm hàng) + bàn thứ 2 + kệ thứ 2 sớm nhất có thể
   const shelfCount = s.grid.cells.filter((c) => c?.type === 'shelf').length;
   const packerCount = s.grid.cells.filter((c) => c?.type === 'packer').length;

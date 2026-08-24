@@ -1,6 +1,6 @@
 {
   "channels": [
-    { "id": "flea",    "name": "Chợ Trời Online", "openCost": 0,     "dailyFee": 0,   "commission": 0.12, "trafficK": 1.0, "unlockStage": 1, "peakHourMult": 2 },
+    { "id": "flea",    "name": "Chợ Trời Online", "openCost": 0,     "upgradeCostBase": 2500, "dailyFee": 0, "commission": 0.12, "trafficK": 1.0, "unlockStage": 1, "peakHourMult": 2 },
     { "id": "mall",    "name": "Sàn MegaMall",    "openCost": 20000, "dailyFee": 500, "commission": 0.05, "trafficK": 1.5, "unlockStage": 2, "peakHourMult": 2, "minRating": 3.5 },
     { "id": "social",  "name": "SocialShop",      "openCost": 15000, "dailyFee": 300, "commission": 0.02, "trafficK": 1.2, "unlockStage": 3, "peakHourMult": 3 },
     { "id": "website", "name": "Website riêng",   "openCost": 40000, "dailyFee": 800, "commission": 0.00, "trafficK": 0.6, "unlockStage": 4, "peakHourMult": 2,

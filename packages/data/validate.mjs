@@ -6,6 +6,8 @@ for (const i of d.industries.industries) { if (ids.has(i.id)) die('trùng indust
 const chIds = d.channels.channels.map((c) => c.id);
 for (const [ind, m] of Object.entries(d.channels.affinity))
   for (const c of chIds) if (!(c in m)) die(`affinity thiếu ${ind}.${c}`);
+for (const c of d.channels.channels)
+  if (!(c.openCost > 0) && !(c.upgradeCostBase > 0)) die(`kênh ${c.id} mở miễn phí cần upgradeCostBase > 0`);
 const p = d.calendar.marketCycle.states.reduce((s, x) => s + x.p, 0);
 if (Math.abs(p - 1) > 1e-9) die('tổng xác suất chu kỳ = ' + p);
 if (d.stages.stages.length !== 6) die('cần 6 stage');

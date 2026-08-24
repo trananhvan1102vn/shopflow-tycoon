@@ -111,7 +111,7 @@ Người chơi mở và nâng cấp các kênh; **mỗi đơn phát sinh trên m
 | Thể thao | 1.0 | **1.2** | 1.1 | 1.0 |
 | Thú cưng | 1.1 | 1.0 | 1.0 | **1.4** |
 
-**Cấp kênh:** mỗi kênh nâng tối đa cấp 3 (giá = 2× và 4× phí mở): cấp 2 K +25%, cấp 3 K +50% và −1 điểm % hoa hồng.
+**Cấp kênh:** mỗi kênh nâng tối đa cấp 3 (giá = 2× và 4× giá gốc nâng cấp; giá gốc = phí mở, riêng kênh mở miễn phí dùng giá gốc riêng): cấp 2 K +25%, cấp 3 K +50% và −1 điểm % hoa hồng. Chợ Trời Online (phí mở $0) có giá gốc nâng cấp **$25** → cấp 2 $50, cấp 3 $100 — nâng cấp không bao giờ cho không.
 
 **Sinh đơn mỗi 10 giây, cho từng sản phẩm:**
 

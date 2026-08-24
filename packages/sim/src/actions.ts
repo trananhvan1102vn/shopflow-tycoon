@@ -178,7 +178,9 @@ export function upgradeChannel(s: GameState, channelId: string): GameState {
   const st = s.channels.find((c) => c.id === channelId);
   if (!def || !st) return reject(s, 'Kênh chưa mở');
   if (st.level >= 3) return reject(s, 'Đã cấp tối đa');
-  const cost = def.openCost * CH.levelBonus[String(st.level + 1) as '2' | '3'].costMult;
+  // Kênh mở miễn phí (flea) có giá nâng cấp riêng để cấp 2–3 không thành đồ cho không (spec B5).
+  const base = (def as any).upgradeCostBase ?? def.openCost;
+  const cost = base * CH.levelBonus[String(st.level + 1) as '2' | '3'].costMult;
   if (s.money < cost) return reject(s, 'Không đủ tiền');
   return ok({
     ...s, money: s.money - cost,

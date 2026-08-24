@@ -19,6 +19,16 @@ describe('channels', () => {
     expect(s.channels.find(c => c.id === 'mall')!.level).toBe(2);
     expect(s.money).toBe(100000 - 20000 - 40000);
   });
+  it('flea upgrade dùng upgradeCostBase (không miễn phí dù openCost 0)', () => {
+    let s = createGame(42, 'electronics');
+    s = upgradeChannel(s, 'flea');
+    expect(s.channels.find(c => c.id === 'flea')!.level).toBe(2);
+    expect(s.money).toBe(100000 - 5000); // cấp 2 = 2500×2
+    s = upgradeChannel(s, 'flea');
+    expect(s.money).toBe(100000 - 5000 - 10000); // cấp 3 = 2500×4
+    s.money = 0;
+    expect(upgradeChannel({ ...s, channels: s.channels.map(c => ({ ...c, level: 1 as const })) }, 'flea').lastReject).toBeTruthy();
+  });
   it('tạm đóng removes channel from order rate', () => {
     let s = openChannel(atStage2(), 'mall');
     const before = orderRate(s, 'electronics', 40, 1);
