@@ -27,8 +27,8 @@ export default function IndustrySelect({ mode = 'start', onDone }: {
     if (!sel) return;
     if (next) { dispatch('chooseIndustry', sel); onDone?.(); } else start(sel);
   };
-  return (
-    <div className={`mx-auto max-w-md p-4 pb-24 ${next ? 'min-h-screen bg-slate-50' : ''}`}>
+  const body = (
+    <div className="mx-auto max-w-md p-4 pb-28">
       {next && <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Mở rộng</p>}
       <h1 className="mb-1 text-xl font-bold">
         {next ? 'Sếp muốn mở thêm ngành nào?' : 'Sếp có $1,000. Sếp muốn bán gì trước?'}
@@ -62,11 +62,18 @@ export default function IndustrySelect({ mode = 'start', onDone }: {
         ))}
       </div>
       <button disabled={!sel} onClick={confirm}
-        className="fixed inset-x-4 bottom-4 mx-auto max-w-md rounded-xl bg-emerald-600 p-3 font-bold text-white disabled:bg-slate-300">
+        className="fixed inset-x-4 bottom-4 z-10 mx-auto max-w-md rounded-xl bg-emerald-600 p-3 font-bold text-white disabled:bg-slate-300">
         {sel
           ? `${next ? 'Mở ngành' : 'Bắt đầu với'} ${pickable.find((i: any) => i.id === sel)!.name}`
           : 'Chọn một ngành'}
       </button>
     </div>
   );
+
+  // `mode='next'` chạy đè lên màn chơi (App vẫn render Hud/TabBar bên dưới), nên
+  // phải là overlay toàn màn hình. `z-50` > `z-40` của TabBar; container fixed +
+  // z-index tạo stacking context riêng nên nút xác nhận (cũng `fixed`, neo theo
+  // viewport vì không có ancestor nào transform) luôn nằm trên TabBar.
+  if (!next) return body;
+  return <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-50">{body}</div>;
 }
