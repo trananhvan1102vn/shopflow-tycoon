@@ -5,17 +5,41 @@ import { usd } from '../format';
 
 const ICONS: Record<string, string> = { electronics: '📱', fashion: '👗', home: '🏠', books: '📚', toys: '🎮', beauty: '💄', sports: '⚽', pets: '🐾' };
 
-export default function IndustrySelect() {
+/**
+ * `mode='start'` — màn chọn ngành đầu game (mặc định, hành vi cũ): xác nhận → `start(id)`.
+ * `mode='next'` — mở ngành thứ N sau khi qua màn: loại ngành đã sở hữu,
+ * xác nhận → `dispatch('chooseIndustry', id)` rồi gọi `onDone`.
+ */
+export default function IndustrySelect({ mode = 'start', onDone }: {
+  mode?: 'start' | 'next';
+  onDone?: () => void;
+} = {}) {
   const start = useGame((s) => s.start);
+  const dispatch = useGame((s) => s.dispatch);
+  const owned = useGame((s) => s.game?.industries) ?? [];
   const [sel, setSel] = useState<string | null>(null);
-  const starters = IND.industries.filter((i) => i.unlock === 'start-option');
-  const locked = IND.industries.filter((i) => i.unlock !== 'start-option');
+  const next = mode === 'next';
+  const pickable = IND.industries.filter(
+    (i: any) => i.unlock === 'start-option' && (!next || !owned.includes(i.id)),
+  );
+  const locked = IND.industries.filter((i: any) => i.unlock !== 'start-option');
+  const confirm = () => {
+    if (!sel) return;
+    if (next) { dispatch('chooseIndustry', sel); onDone?.(); } else start(sel);
+  };
   return (
-    <div className="mx-auto max-w-md p-4 pb-24">
-      <h1 className="mb-1 text-xl font-bold">Sếp có $1,000. Sếp muốn bán gì trước?</h1>
-      <p className="mb-4 text-sm text-slate-500">Đổi được trong 5 phút đầu.</p>
+    <div className={`mx-auto max-w-md p-4 pb-24 ${next ? 'min-h-screen bg-slate-50' : ''}`}>
+      {next && <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Mở rộng</p>}
+      <h1 className="mb-1 text-xl font-bold">
+        {next ? 'Sếp muốn mở thêm ngành nào?' : 'Sếp có $1,000. Sếp muốn bán gì trước?'}
+      </h1>
+      <p className="mb-4 text-sm text-slate-500">
+        {next
+          ? 'Ngành mới chưa có tồn kho — dùng Nhập lẻ để thử trước khi gom sỉ.'
+          : 'Đổi được trong 5 phút đầu.'}
+      </p>
       <div className="space-y-3">
-        {starters.map((i) => (
+        {pickable.map((i: any) => (
           <button key={i.id} onClick={() => setSel(i.id)}
             className={`w-full rounded-xl bg-white p-4 text-left shadow ${sel === i.id ? 'ring-2 ring-emerald-500' : ''}`}>
             <div className="flex items-center justify-between">
@@ -25,7 +49,7 @@ export default function IndustrySelect() {
               </span>
             </div>
             <div className="mt-2 flex flex-wrap gap-1">
-              {i.products.slice(0, 3).map((p) => (
+              {i.products.slice(0, 3).map((p: any) => (
                 <span key={p.id} className="rounded bg-slate-100 px-2 py-0.5 text-xs">{p.name} {usd(p.retail)}</span>
               ))}
             </div>
@@ -33,13 +57,15 @@ export default function IndustrySelect() {
         ))}
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        {locked.map((i) => (
+        {locked.map((i: any) => (
           <span key={i.id} className="rounded-lg bg-slate-200 px-3 py-1 text-sm text-slate-500">🔒 {ICONS[i.id]} {i.name}</span>
         ))}
       </div>
-      <button disabled={!sel} onClick={() => sel && start(sel)}
+      <button disabled={!sel} onClick={confirm}
         className="fixed inset-x-4 bottom-4 mx-auto max-w-md rounded-xl bg-emerald-600 p-3 font-bold text-white disabled:bg-slate-300">
-        {sel ? `Bắt đầu với ${starters.find((i) => i.id === sel)!.name}` : 'Chọn một ngành'}
+        {sel
+          ? `${next ? 'Mở ngành' : 'Bắt đầu với'} ${pickable.find((i: any) => i.id === sel)!.name}`
+          : 'Chọn một ngành'}
       </button>
     </div>
   );
