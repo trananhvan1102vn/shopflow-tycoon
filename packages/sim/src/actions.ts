@@ -79,7 +79,7 @@ export function buyBundle(s: GameState, industryId: string, bundleId: string, ca
   }
   cost = Math.round(cost) + carrier.fee;
   if (s.money < cost) return reject(s, 'Không đủ tiền');
-  const itemsTotal = Object.values(bundle.items).reduce((a, b) => a + b, 0);
+  const itemsTotal = Object.values(bundle.items as Record<string, number>).reduce((a, b) => a + b, 0);
   if (Math.max(0, bundle.days + carrier.daysDelta) === 0 && itemsTotal > pendingAuditCapacity(s))
     return reject(s, 'Khu chờ kiểm đã đầy — cần ô trống');
   const r = makeDelivery({ ...s, seasonalBought }, bundle.items as Record<string, number>, cost, carrierId, bundle.days);
