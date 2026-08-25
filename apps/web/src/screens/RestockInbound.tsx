@@ -1,28 +1,14 @@
 import { useRef } from 'react';
-import { industries as IND, suppliers as SUP, calendar as CAL } from '@shopflow/data';
+import { industries as IND, suppliers as SUP } from '@shopflow/data';
 import type { Delivery } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usdCents } from '../format';
-
-/** Lịch game: 12 tháng × 30 ngày (tick.ts). */
-const dayOfYear = (m: number, d: number) => (m - 1) * 30 + d;
 
 const PRODUCT_NAME: Record<string, string> = Object.fromEntries(
   IND.industries.flatMap((i: any) => i.products.map((p: any) => [p.id, p.name] as const)),
 );
 
 const carrierName = (id: string) => SUP.carriers.find((c: any) => c.id === id)?.name ?? id;
-
-/** Cửa sổ ngưng vận chuyển: cờ `logisticsSuspended` (cả sự kiện) hoặc `logisticsSuspendedRange`. */
-function suspensionWindows(): { name: string; from: number[]; to: number[] }[] {
-  return CAL.events.flatMap((e: any) =>
-    e.logisticsSuspendedRange
-      ? [{ name: e.name, from: e.logisticsSuspendedRange[0], to: e.logisticsSuspendedRange[1] }]
-      : e.logisticsSuspended
-        ? [{ name: e.name, from: e.from, to: e.to }]
-        : [],
-  );
-}
 
 export default function RestockInbound() {
   const game = useGame((s) => s.game);
@@ -35,12 +21,6 @@ export default function RestockInbound() {
   const auditing = game.deliveries.filter((d) => d.state === 'auditing');
   const packers = game.grid.cells.filter((c) => c && c.type === 'packer').length;
   const stock = Object.values(game.inventory).reduce((a: number, b: number) => a + b, 0);
-
-  const today = dayOfYear(game.clock.month, game.clock.day);
-  const next = suspensionWindows()
-    .map((w) => ({ ...w, at: dayOfYear(w.from[0], w.from[1]) }))
-    .map((w) => ({ ...w, dist: w.at >= today ? w.at - today : w.at + 360 - today }))
-    .sort((a, b) => a.dist - b.dist)[0];
 
   return (
     <div className="space-y-3">
@@ -108,13 +88,6 @@ export default function RestockInbound() {
           </div>
         );
       })}
-
-      {next && (
-        <p className="text-xs text-slate-500">
-          📅 Ngưng vận chuyển tiếp theo: <b>{next.from[1]}/{next.from[0]}–{next.to[1]}/{next.to[0]}</b> ({next.name}) ·
-          {' '}còn {next.dist} ngày — đặt hàng trước.
-        </p>
-      )}
     </div>
   );
 }

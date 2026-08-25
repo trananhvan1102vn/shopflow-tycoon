@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, tick, makeRng, orderRate } from '../src/index.js';
 import { openChannel, upgradeChannel, setChannelOpen } from '../src/actions.js';
+import { channelWeights } from '../src/formulas.js';
+import { channels as CH } from '@shopflow/data';
 
 const rng = makeRng(1);
 const atStage2 = () => { const s = createGame(42, 'electronics'); s.stage = 2; return s; };
@@ -28,6 +30,16 @@ describe('channels', () => {
     expect(s.money).toBe(100000 - 5000 - 10000); // cấp 3 = 2500×4
     s.money = 0;
     expect(upgradeChannel({ ...s, channels: s.channels.map(c => ({ ...c, level: 1 as const })) }, 'flea').lastReject).toBeTruthy();
+  });
+  it('channelWeights áp levelBonus giống orderRate (mall L3 nặng hơn L1 đúng kMult)', () => {
+    const s1 = openChannel(atStage2(), 'mall');
+    let s3 = upgradeChannel({ ...s1, money: 1_000_000 }, 'mall');
+    s3 = upgradeChannel(s3, 'mall');
+    expect(s3.channels.find(c => c.id === 'mall')!.level).toBe(3);
+    const w = (s: typeof s1) => Object.fromEntries(channelWeights(s, 'electronics'));
+    const kMult = CH.levelBonus['2'].kMult * CH.levelBonus['3'].kMult;
+    expect(w(s3).mall).toBeCloseTo(w(s1).mall * kMult);
+    expect(w(s3).flea).toBeCloseTo(w(s1).flea); // kênh không nâng cấp không đổi
   });
   it('tạm đóng removes channel from order rate', () => {
     let s = openChannel(atStage2(), 'mall');

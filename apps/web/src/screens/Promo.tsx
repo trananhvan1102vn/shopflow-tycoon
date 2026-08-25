@@ -24,13 +24,6 @@ const range = (from: number[], to: number[]): string =>
 const hits = (industries: any, industryId: string): boolean =>
   industries === 'all' || (industries as string[]).includes(industryId);
 
-/** Khoảng ngưng vận chuyển của một sự kiện: cờ toàn sự kiện, hoặc khoảng con khai báo riêng. */
-function suspendRange(e: any): [number[], number[]] | null {
-  if (e.logisticsSuspendedRange) return e.logisticsSuspendedRange as [number[], number[]];
-  if (e.logisticsSuspended) return [e.from, e.to];
-  return null;
-}
-
 /**
  * Sự kiện sắp tới: sự kiện đầu tiên **chưa kết thúc** tính từ hôm nay (đang diễn ra cũng tính).
  * Hết năm thì vòng lại sự kiện đầu tiên của năm sau.
@@ -74,7 +67,6 @@ export default function Promo() {
           .map((id) => (IND.industries as any[]).find((i) => i.id === id)?.name ?? id)
           .join(' · ');
 
-  const susp = ev ? suspendRange(ev) : null;
   // Gói mùa đang mở hôm nay (nếu có) — nhắc hạn chót đặt gói.
   const bundleNow = (CAL.seasonalBundles as any[]).find((b) =>
     inWindow(month, day, b.window[0], b.window[1]));
@@ -154,7 +146,6 @@ export default function Promo() {
         <p className="mt-2 text-xs text-slate-400">
           Ngày {day}/{month}
           {bundleNow && ` · Gói mùa còn mở tới ${dm(bundleNow.window[1])}`}
-          {susp && ` · Ngưng vận chuyển ${range(susp[0], susp[1])} (${ev.name})`}
         </p>
       </div>
 

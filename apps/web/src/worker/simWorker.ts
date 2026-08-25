@@ -1,5 +1,6 @@
 import { createGame, tick, makeRng, type GameState, type Rng } from '@shopflow/sim';
 import * as A from '@shopflow/sim';
+import { validateSave } from '../save';
 
 let state: GameState | null = null;
 let rng: Rng | null = null;
@@ -36,16 +37,17 @@ const ACTIONS: Record<string, (...a: any[]) => GameState> = {
 self.onmessage = (ev: MessageEvent) => {
   const msg = ev.data;
   if (msg.type === 'init') {
-    if (msg.save) {
-      try {
-        const { seed, state: saved } = JSON.parse(msg.save);
-        // Resume re-derives the rng from seed + completedOrders — an approximate
-        // replay position, acceptable for M1.
-        state = saved; rng = makeRng(seed + (saved.completedOrders ?? 0));
-        startLoop(); post(); return;
-      } catch { /* save hỏng → chơi mới */ }
+    const valid = validateSave(msg.save ?? null);
+    if (valid) {
+      // Resume re-derives the rng from seed + completedOrders — an approximate
+      // replay position, acceptable for M1.
+      state = valid.state;
+      rng = makeRng(valid.seed + (valid.state.completedOrders ?? 0));
+      startLoop(); post(); return;
     }
+    if (msg.save) console.warn('[simWorker] save không hợp lệ (hỏng hoặc sai version) → chơi mới');
     (self as any).postMessage({ type: 'nosave' });
+    return;
   }
   if (msg.type === 'start') {
     state = createGame(msg.seed, msg.industryId);
@@ -53,7 +55,9 @@ self.onmessage = (ev: MessageEvent) => {
     startLoop(); post();
   }
   if (msg.type === 'setPaused') { paused = msg.paused; }
-  if (msg.type === 'action' && state && ACTIONS[msg.name]) {
+  if (msg.type === 'action') {
+    if (!ACTIONS[msg.name]) { console.warn('[simWorker] action không tồn tại:', msg.name); return; }
+    if (!state) return;
     state = ACTIONS[msg.name](...(msg.args ?? []));
     post();
   }

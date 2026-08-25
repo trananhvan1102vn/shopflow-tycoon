@@ -98,7 +98,7 @@ export function expediteDelivery(s: GameState, deliveryId: string): GameState {
   const arrived = daysLeft <= 0;
   const deliveries = s.deliveries.map((x) =>
     x.id === deliveryId
-      ? { ...x, carrierId: 'express', daysLeft: Math.max(0, daysLeft), state: arrived ? ('auditing' as const) : ('shipping' as const) }
+      ? { ...x, carrierId: 'express', cost: x.cost + extra, daysLeft: Math.max(0, daysLeft), state: arrived ? ('auditing' as const) : ('shipping' as const) }
       : x);
   return ok({
     ...s, money: s.money - extra, dayPurchases: s.dayPurchases + extra, deliveries,

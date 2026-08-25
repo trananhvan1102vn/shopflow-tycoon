@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { GameState } from '@shopflow/sim';
+import { SAVE_VERSION, validateSave } from './save';
 
 const SAVE_KEY = 'shopflow-save';
 
@@ -20,9 +21,9 @@ export const useGame = create<GameStore>((set, get) => {
   const w = new Worker(new URL('./worker/simWorker.ts', import.meta.url), { type: 'module' });
   worker = w;
   const savedRaw = localStorage.getItem(SAVE_KEY);
-  // Save hỏng → không crash, rơi về chơi mới (worker cũng tự trả `nosave` cho blob hỏng).
-  let savedSeed: number | null = null;
-  try { savedSeed = savedRaw ? JSON.parse(savedRaw).seed ?? null : null; } catch { savedSeed = null; }
+  // Save hỏng / sai version / sai shape → không crash, rơi về chơi mới
+  // (worker dùng đúng validateSave này nên hai bên luôn đồng ý).
+  const savedSeed = validateSave(savedRaw)?.seed ?? null;
   // UI shell code: performance.now() only seeds the UI; the sim only ever sees the numeric seed.
   const seed = savedSeed ?? (Math.floor(performance.now() * 1000) % 2 ** 31 || 1);
   w.onmessage = (ev) => {
@@ -33,7 +34,7 @@ export const useGame = create<GameStore>((set, get) => {
 
   const save = () => {
     const g = get().game;
-    if (g) localStorage.setItem(SAVE_KEY, JSON.stringify({ seed: get().seed, state: g }));
+    if (g) localStorage.setItem(SAVE_KEY, JSON.stringify({ seed: get().seed, version: SAVE_VERSION, state: g }));
   };
   setInterval(save, 60_000);
   document.addEventListener('visibilitychange', () => document.hidden && save());
