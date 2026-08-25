@@ -21,7 +21,7 @@
         { "id": "sneakers", "name": "Sneakers", "retail": 10000, "wholesale": 2500, "unlockStage": 2 } ],
       "bundles": [
         { "id": "casual", "name": "Casual Bundle", "cost": 10000, "days": 1, "items": { "tshirt": 15, "socks": 15 }, "unlockStage": 1 },
-        { "id": "winter", "name": "Winter Bundle", "cost": 16000, "days": 2, "items": { "hoodie": 8, "socks": 16 }, "unlockStage": 1 },
+        { "id": "winter", "name": "Winter Bundle", "cost": 12000, "days": 2, "items": { "hoodie": 8, "socks": 16 }, "unlockStage": 1 },
         { "id": "street", "name": "Street Bundle", "cost": 20000, "days": 2, "items": { "sneakers": 5, "hoodie": 6 }, "unlockStage": 2 },
         { "id": "mega",   "name": "Mega Fashion",  "cost": 28000, "days": 3, "items": { "tshirt": 10, "jeans": 5, "sneakers": 3, "hoodie": 4, "socks": 10 }, "unlockStage": 2 } ] },
     { "id": "home", "name": "Gia dụng & nhà bếp", "V": 0.6, "avgOrderValue": 8500, "unlock": "start-option", "traits": { "bulky": ["vacuum", "microwave", "purifier"], "bundleShipMult": 1.5 },
@@ -32,7 +32,7 @@
         { "id": "microwave", "name": "Lò vi sóng", "retail": 18000, "wholesale": 4500, "unlockStage": 2 },
         { "id": "purifier",  "name": "Máy lọc không khí", "retail": 28000, "wholesale": 7000, "unlockStage": 2 } ],
       "bundles": [
-        { "id": "kitchen",  "name": "Kitchen Bundle",  "cost": 20000, "days": 2, "items": { "kettle": 10, "hairdryer": 6 }, "unlockStage": 1 },
+        { "id": "kitchen",  "name": "Kitchen Bundle",  "cost": 12000, "days": 2, "items": { "kettle": 10, "hairdryer": 6 }, "unlockStage": 1 },
         { "id": "cleaning", "name": "Cleaning Bundle", "cost": 22000, "days": 2, "items": { "vacuum": 5, "hairdryer": 10 }, "unlockStage": 1 },
         { "id": "aircare",  "name": "Air Care Bundle", "cost": 30000, "days": 2, "items": { "hairdryer": 12, "purifier": 3 }, "unlockStage": 2 },
         { "id": "mega",     "name": "Mega Home",       "cost": 50000, "days": 3, "items": { "kettle": 5, "vacuum": 3, "purifier": 2, "microwave": 2, "hairdryer": 5 }, "unlockStage": 2 } ] },
