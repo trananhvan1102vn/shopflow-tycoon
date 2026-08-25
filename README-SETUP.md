@@ -25,4 +25,4 @@ docs            # kịch bản + mockup PNG
 - Mọi PR chạy `pnpm test`; harness fail nếu màn 1 lệch khỏi 15–25 phút.
 
 ## Lộ trình
-M0 scaffold ✅ → M1 sim màn 1–2 + UI Kho/Nhập/Bán hàng ✅ (hoàn thành 2026-08-24) → M2 đủ 6 màn + sự kiện → M3 Capacitor iOS/Android + cloud save → M4 beta → M5 launch.
+M0 scaffold ✅ → M1 sim màn 1–2 + UI Kho/Nhập/Bán hàng ✅ (hoàn thành 2026-08-25) → M2 đủ 6 màn + sự kiện → M3 Capacitor iOS/Android + cloud save → M4 beta → M5 launch.
