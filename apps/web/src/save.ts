@@ -1,9 +1,10 @@
 /** Định dạng save có version — bump khi shape của GameState đổi (save cũ bị bỏ, chơi mới). */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export interface SaveBlob {
   seed: number;
   version: number;
+  savedAt?: number;
   state: any;
 }
 
@@ -11,7 +12,7 @@ export interface SaveBlob {
  * Parse + kiểm tra một blob save thô. Trả về null nếu hỏng / sai version / sai shape,
  * để cả store lẫn worker cùng rơi về "chơi mới" thay vì crash hoặc NaN-brick.
  */
-export function validateSave(raw: string | null): { seed: number; state: any } | null {
+export function validateSave(raw: string | null): { seed: number; state: any; savedAt: number | null } | null {
   if (!raw) return null;
   let parsed: any;
   try {
@@ -27,5 +28,8 @@ export function validateSave(raw: string | null): { seed: number; state: any } |
   if (typeof state.money !== 'number') return null;
   if (typeof state.packAccum !== 'number') return null;
   if (!Array.isArray(state.orders)) return null;
-  return { seed: parsed.seed, state };
+  if (!state.tutorial || typeof state.tutorial.step !== 'number') return null;
+  if (!Array.isArray(state.questsDone)) return null;
+  const savedAt = typeof parsed.savedAt === 'number' && Number.isFinite(parsed.savedAt) ? parsed.savedAt : null;
+  return { seed: parsed.seed, state, savedAt };
 }
