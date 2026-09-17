@@ -38,10 +38,27 @@ export function relationshipXp(s: GameState, supplierId: string): { xp: number; 
   return { xp, level, nextXp: next ? next.xp : null };
 }
 
-/** Hệ số giá theo hạng; đặc quyền cấp có `exclusiveBundle`: hạng A giá hạng B. */
+export interface RelationshipPerks { exclusiveBundle: boolean; daysDelta: number }
+
+/**
+ * Đặc quyền quan hệ là **cộng dồn**: mọi mốc đã vượt qua vẫn còn hiệu lực.
+ * (Nếu chỉ đọc `levels[cấp hiện tại]` thì `exclusiveBundle` ở index 2 và `daysDelta`
+ * ở index 3 sẽ biến mất khi lên cấp cao hơn — spec §1.2 nói ngược lại.)
+ */
+export function relationshipPerks(s: GameState, supplierId: string): RelationshipPerks {
+  const lv = relationshipLevel(s, supplierId);
+  const levels = SUP.relationship.levels as any[];
+  let exclusiveBundle = false, daysDelta = 0;
+  for (let i = 0; i <= lv; i++) {
+    if (levels[i]?.exclusiveBundle) exclusiveBundle = true;
+    daysDelta += levels[i]?.daysDelta ?? 0;
+  }
+  return { exclusiveBundle, daysDelta };
+}
+
+/** Hệ số giá theo hạng; đặc quyền `exclusiveBundle` (cộng dồn): hạng A giá hạng B. */
 export function gradeCostMult(s: GameState, supplierId: string, grade: Grade): number {
-  const lv = (SUP.relationship.levels as any[])[relationshipLevel(s, supplierId)];
-  if (grade === 'A' && lv.exclusiveBundle) return SUP.grades.B.costMult;
+  if (grade === 'A' && relationshipPerks(s, supplierId).exclusiveBundle) return SUP.grades.B.costMult;
   return (SUP.grades as any)[grade].costMult;
 }
 

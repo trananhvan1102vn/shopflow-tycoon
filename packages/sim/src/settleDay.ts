@@ -44,7 +44,9 @@ export function settleDay(s: GameState, rng: Rng): GameState {
       const next = rollMarketCycle(rng);
       if (marketCycle === 'recession' && next !== 'recession' && recessionClean) survivedRecession = true;
       if (next === 'recession' && marketCycle !== 'recession') recessionClean = true;
-      marketCycle = next; marketCycleDaysLeft = CAL.marketCycle.periodDays;
+      // Lần kết toán này đã là ngày đầu của chu kỳ mới → còn `periodDays − 1` ngày nữa,
+      // để mỗi chu kỳ kéo dài đúng `periodDays` lần kết toán (không phải periodDays + 1).
+      marketCycle = next; marketCycleDaysLeft = CAL.marketCycle.periodDays - 1;
     } else marketCycleDaysLeft--;
   }
 

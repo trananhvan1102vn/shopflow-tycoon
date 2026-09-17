@@ -20,10 +20,24 @@ describe('market cycle (từ màn 3, đổi mỗi 5 ngày)', () => {
   it('rolls at stage 3 when daysLeft hits 0, then counts down', () => {
     let s = settleDay(midnight(3), seq(0.9));
     expect(s.marketCycle).toBe('recession');
-    expect(s.marketCycleDaysLeft).toBe(CAL.marketCycle.periodDays);
+    // Lần kết toán vừa rồi đã là ngày 1 của chu kỳ → còn periodDays − 1 ngày.
+    expect(s.marketCycleDaysLeft).toBe(CAL.marketCycle.periodDays - 1);
     expect(s.recessionClean).toBe(true);
     s = settleDay(s, seq(0.0));
-    expect(s.marketCycle).toBe('recession'); expect(s.marketCycleDaysLeft).toBe(CAL.marketCycle.periodDays - 1);
+    expect(s.marketCycle).toBe('recession'); expect(s.marketCycleDaysLeft).toBe(CAL.marketCycle.periodDays - 2);
+  });
+  it('a cycle lasts exactly periodDays settles', () => {
+    const P = CAL.marketCycle.periodDays;
+    let s = settleDay(midnight(3), seq(0.9)); // roll → recession (lần kết toán 1)
+    expect(s.marketCycle).toBe('recession');
+    for (let i = 1; i < P; i++) {
+      s = settleDay(s, seq(0.0)); // vẫn recession cho tới hết periodDays lần
+      expect(s.marketCycle, `kết toán ${i + 1}`).toBe('recession');
+    }
+    expect(s.marketCycleDaysLeft).toBe(0);
+    s = settleDay(s, seq(0.0)); // lần thứ periodDays + 1 → chu kỳ mới
+    expect(s.marketCycle).toBe('stable');
+    expect(s.marketCycleDaysLeft).toBe(P - 1);
   });
   it('leaving a clean recession sets survivedRecession', () => {
     let s = midnight(3); s.marketCycle = 'recession'; s.marketCycleDaysLeft = 1;

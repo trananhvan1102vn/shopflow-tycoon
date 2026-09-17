@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame } from '../src/index.js';
-import { checkQuests, questsForStage, questDone } from '../src/quests.js';
-import { openChannel, buySeo, placeEquipment } from '../src/actions.js';
+import { checkQuests, questsForStage, questDone, QUEST_PREDICATE_IDS } from '../src/quests.js';
+import { openChannel, buySeo, placeEquipment, advanceStage } from '../src/actions.js';
 import { stages as ST } from '@shopflow/data';
 
 const at = (stage: number) => { const s = createGame(42, 'electronics'); s.stage = stage; s.money = 10_000_000; return s; };
@@ -41,5 +41,18 @@ describe('quests', () => {
   it('buy_seasonal', () => {
     const s = at(2); s.seasonalBought = { valentine_gift: 1 };
     expect(questDone(checkQuests(s), 'buy_seasonal')).toBe(true);
+  });
+  it('every quest id in data has a predicate', () => {
+    const ids = Object.values((ST as any).quests as Record<string, { id: string }[]>).flat().map((q) => q.id);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) expect(QUEST_PREDICATE_IDS, `nhiệm vụ "${id}" thiếu predicate`).toContain(id);
+  });
+  it('advanceStage resets profitStreakDays so profit_5_days cannot pay out instantly', () => {
+    const s = at(2);
+    s.stageComplete = true; s.profitStreakDays = 9;
+    const out = advanceStage(s);
+    expect(out.stage).toBe(3);
+    expect(out.profitStreakDays).toBe(0);
+    expect(questDone(out, 'profit_5_days')).toBe(false);
   });
 });

@@ -29,9 +29,10 @@ export function fastForward(s: GameState, ticks: number, rng: Rng): { state: Gam
   const newReports = state.reports.slice(s.reports.length);
   const feesPaid = newReports.reduce((a, r) => a + r.rent + r.maintenance + r.channelFees, 0);
   const reportRevenue = newReports.reduce((a, r) => a + Object.values(r.revenueByChannel).reduce((x, y) => x + y, 0) - r.commission, 0);
-  const netRevenue = newReports.length > 0
-    ? reportRevenue + partialRevenue(state)
-    : partialRevenue(state) - partialRevenue(s);
+  // Doanh thu "kiếm được khi sếp vắng" = tổng các báo cáo mới + phần dở dang hiện tại
+  // − phần dở dang lúc rời đi (phần này đã nằm trong báo cáo đầu tiên, hoặc vẫn còn trong
+  // `dayRevenue` nếu chưa kết toán ngày nào). Một biểu thức đúng cho cả hai trường hợp.
+  const netRevenue = reportRevenue + partialRevenue(state) - partialRevenue(s);
   return {
     state,
     summary: {

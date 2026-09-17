@@ -18,6 +18,9 @@ const PREDICATES: Record<string, (s: GameState) => boolean> = {
   profit_5_days: (s) => s.profitStreakDays >= 5,
 };
 
+/** Mọi id nhiệm vụ có predicate — dùng để đối chiếu với `stages.quests` trong test. */
+export const QUEST_PREDICATE_IDS: string[] = Object.keys(PREDICATES);
+
 /** Trả thưởng cho mọi nhiệm vụ của màn hiện tại vừa đạt; mỗi nhiệm vụ chỉ một lần. */
 export function checkQuests(s: GameState): GameState {
   let out = s;

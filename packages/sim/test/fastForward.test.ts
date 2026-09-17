@@ -37,6 +37,25 @@ describe('fastForward', () => {
       + Object.values(state.dayRevenue).reduce((x, y) => x + y, 0) - state.dayCommission);
     expect(summary.lowStock.every((id) => (state.inventory[id] ?? 0) < 10)).toBe(true);
   });
+  it('netRevenue excludes the partial day revenue the player already had when leaving', () => {
+    const s0 = playing();
+    s0.dayRevenue = { flea: 12345 };   // đã bán được trong ngày trước khi rời đi
+    s0.dayCommission = 1481;
+    const startingPartial = 12345 - 1481;
+
+    const { state, summary } = fastForward(s0, 600, makeRng(7));
+    expect(state.reports.length).toBeGreaterThanOrEqual(1); // có kết toán → phần dở dang trên đã vào báo cáo
+
+    // Tính tay: thu ròng ghi trong các báo cáo mới + phần dở dang của ngày đang chạy,
+    // trừ phần đã có sẵn lúc rời đi (nó nằm trong báo cáo đầu tiên nên nếu không trừ sẽ bị đếm thêm).
+    const inReports = state.reports.reduce(
+      (a, r) => a + Object.values(r.revenueByChannel).reduce((x, y) => x + y, 0) - r.commission, 0);
+    const openDay = Object.values(state.dayRevenue).reduce((x, y) => x + y, 0) - state.dayCommission;
+    expect(summary.netRevenue).toBe(inReports + openDay - startingPartial);
+
+    // Kiểm tra độc lập: doanh thu có sẵn từ trước không được làm đổi con số "kiếm khi vắng".
+    expect(summary.netRevenue).toBe(fastForward(playing(), 600, makeRng(7)).summary.netRevenue);
+  });
   it('clamps to [0, MAX_OFFLINE_TICKS]', () => {
     expect(fastForward(playing(), -5, makeRng(1)).summary.ticks).toBe(0);
     expect(fastForward(playing(), 10 ** 9, makeRng(1)).summary.ticks).toBe(MAX_OFFLINE_TICKS);

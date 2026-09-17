@@ -3,7 +3,7 @@ import type { Cents, Delivery, GameState, Grade } from './types.js';
 import { wholesaleEnvMult } from './env.js';
 import { shelfCapacity } from './logistics.js';
 import { modifiers } from './modifiers.js';
-import { supplierDef, supplierUnlocked, gradeAllowed, gradeCostMult, relationshipDiscount, relationshipLevel, addRelationshipXp } from './suppliers.js';
+import { supplierDef, supplierUnlocked, gradeAllowed, gradeCostMult, relationshipDiscount, relationshipPerks, addRelationshipXp } from './suppliers.js';
 import { checkQuests } from './quests.js';
 
 const ok = (s: GameState): GameState => checkQuests({ ...s, lastReject: null });
@@ -27,8 +27,7 @@ const norm = (o: PurchaseOpts) => ({ carrierId: o.carrierId, supplierId: o.suppl
 /** Ngày giao (spec B3): gói + nguồn + hãng − 1 (quan hệ có daysDelta) × Định Tuyến. */
 function deliveryDays(s: GameState, baseDays: number, supplierId: string, carrierId: string): number {
   const sup = supplierDef(supplierId); const carrier = (SUP.carriers as any[]).find((c) => c.id === carrierId);
-  const rel = (SUP.relationship.levels as any[])[relationshipLevel(s, supplierId)];
-  const raw = baseDays + (sup?.extraDays ?? 0) + (carrier?.daysDelta ?? 0) + (rel.daysDelta ?? 0);
+  const raw = baseDays + (sup?.extraDays ?? 0) + (carrier?.daysDelta ?? 0) + relationshipPerks(s, supplierId).daysDelta;
   return Math.max(0, Math.round(raw * modifiers(s).deliveryDays));
 }
 
@@ -276,5 +275,7 @@ export function chooseIndustry(s: GameState, industryId: string): GameState {
 export function advanceStage(s: GameState): GameState {
   if (!s.stageComplete) return reject(s, 'Chưa hoàn thành mục tiêu màn');
   const reward = ST.stages[s.stage - 1].reward ?? 0;
-  return ok({ ...s, money: s.money + reward, stage: s.stage + 1, stageComplete: false });
+  // Chuỗi ngày lãi đếm lại từ đầu ở màn mới: nhiệm vụ `profit_5_days` (màn 3) phải được
+  // kiếm trong màn 3, không được trả ngay khi vừa bước vào nhờ chuỗi tích ở màn 2.
+  return ok({ ...s, money: s.money + reward, stage: s.stage + 1, stageComplete: false, profitStreakDays: 0 });
 }
