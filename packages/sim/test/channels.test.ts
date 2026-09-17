@@ -2,24 +2,25 @@ import { describe, it, expect } from 'vitest';
 import { createGame, tick, makeRng, orderRate } from '../src/index.js';
 import { openChannel, upgradeChannel, setChannelOpen } from '../src/actions.js';
 import { channelWeights } from '../src/formulas.js';
-import { channels as CH } from '@shopflow/data';
+import { channels as CH, stages as ST } from '@shopflow/data';
 
 const rng = makeRng(1);
 const atStage2 = () => { const s = createGame(42, 'electronics'); s.stage = 2; return s; };
+const OPEN_MALL = ST.quests['2'].find((q: any) => q.id === 'open_mall').bonus;
 
 describe('channels', () => {
   it('mall locked at stage 1, opens at stage 2 for $200', () => {
     expect(openChannel(createGame(42, 'electronics'), 'mall').lastReject).toBeTruthy();
     const s = openChannel(atStage2(), 'mall');
     expect(s.lastReject).toBeNull();
-    expect(s.money).toBe(100000 - 20000);
+    expect(s.money).toBe(100000 - 20000 + OPEN_MALL);
     expect(s.channels.map(c => c.id)).toContain('mall');
   });
   it('upgrade: level 2 = openCost×2', () => {
     let s = openChannel(atStage2(), 'mall');
     s = upgradeChannel(s, 'mall');
     expect(s.channels.find(c => c.id === 'mall')!.level).toBe(2);
-    expect(s.money).toBe(100000 - 20000 - 40000);
+    expect(s.money).toBe(100000 - 20000 - 40000 + OPEN_MALL);
   });
   it('flea upgrade dùng upgradeCostBase (không miễn phí dù openCost 0)', () => {
     let s = createGame(42, 'electronics');

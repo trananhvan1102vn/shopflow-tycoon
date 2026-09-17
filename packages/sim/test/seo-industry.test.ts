@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { createGame } from '../src/index.js';
 import { buySeo, chooseIndustry } from '../src/actions.js';
+import { stages as ST } from '@shopflow/data';
 
 const atStage2 = () => { const s = createGame(42, 'electronics'); s.stage = 2; return s; };
+const RUN_SEO = ST.quests['2'].find((q: any) => q.id === 'run_seo').bonus;
 
 describe('SEO', () => {
   it('locked at stage 1', () => {
@@ -11,7 +13,7 @@ describe('SEO', () => {
   it('level 1: $160 → score 55; level 2: $400 → 70; level 3 stage-locked', () => {
     let s = buySeo(atStage2(), 'electronics');
     expect(s.seo.electronics).toBe(55);
-    expect(s.money).toBe(100000 - 16000);
+    expect(s.money).toBe(100000 - 16000 + RUN_SEO);
     s = buySeo(s, 'electronics');
     expect(s.seo.electronics).toBe(70);
     expect(buySeo(s, 'electronics').lastReject).toBeTruthy(); // cấp 3 → màn 3

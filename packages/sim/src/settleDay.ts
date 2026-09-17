@@ -2,7 +2,7 @@ import { channels as CH, costs as CO, calendar as CAL, upgrades as UP } from '@s
 import type { GameState, DayReport, Rng } from './types.js';
 import { advanceShipping } from './logistics.js';
 import { decayRelationships } from './suppliers.js';
-import { checkQuests } from './quests.js'; // Task 7 creates it; until then use the stub below
+import { checkQuests } from './quests.js';
 
 /** Chu kỳ thị trường: chọn trạng thái theo trọng số p, đúng thứ tự trong data. */
 export function rollMarketCycle(rng: Rng): string {

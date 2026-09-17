@@ -4,8 +4,9 @@ import { wholesaleEnvMult } from './env.js';
 import { shelfCapacity } from './logistics.js';
 import { modifiers } from './modifiers.js';
 import { supplierDef, supplierUnlocked, gradeAllowed, gradeCostMult, relationshipDiscount, relationshipLevel, addRelationshipXp } from './suppliers.js';
+import { checkQuests } from './quests.js';
 
-const ok = (s: GameState): GameState => ({ ...s, lastReject: null });
+const ok = (s: GameState): GameState => checkQuests({ ...s, lastReject: null });
 const reject = (s: GameState, msg: string): GameState => ({ ...s, lastReject: msg });
 
 function findProduct(productId: string) {
