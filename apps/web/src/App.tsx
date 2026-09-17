@@ -10,6 +10,7 @@ import Promo from './screens/Promo';
 import Hud from './components/Hud';
 import TabBar, { type Tab } from './components/TabBar';
 import Toast from './components/Toast';
+import EventToasts from './components/EventToasts';
 
 /** Placeholder cho các màn sẽ làm ở task sau. */
 const PLACEHOLDERS: Record<Exclude<Tab, 'kho' | 'nhap' | 'ban' | 'quangba'>, string> = {
@@ -49,6 +50,7 @@ export default function App() {
       <DayReportModal />
       {stageOverlay && <StageComplete onClose={() => setStageOverlay(false)} />}
       <Toast />
+      <EventToasts />
     </div>
   );
 }

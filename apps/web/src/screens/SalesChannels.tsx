@@ -1,5 +1,5 @@
 import { channels as CH, industries as IND, upgrades as UP } from '@shopflow/data';
-import { commissionOf, hourMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
+import { commissionOf, nightMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usd } from '../format';
 
@@ -31,7 +31,7 @@ export function estOrdersPerGameHour(game: GameState, ch: ChannelState, industry
     (p: any) => (p.unlockStage ?? 1) <= game.stage && (game.inventory[p.id] ?? 0) > 0,
   ).length;
   if (stocked === 0) return null;
-  const env = trafficEnvMult(game.clock, industryId) * hourMult(game.clock.minute);
+  const env = trafficEnvMult(game.clock, industryId) * nightMult(game.clock.minute);
   const r = orderRate({ ...game, channels: [ch] }, industryId, game.seo[industryId] ?? UP.seoStart, env);
   return (r / 5) * 1.5 * stocked;
 }
@@ -210,6 +210,9 @@ function ChannelCard({ def, game, dispatch }: {
           {def.dailyFee > 0 ? `${usd(def.dailyFee)}/ngày` : 'miễn phí'} · khách ×{def.trafficK}
           {def.minRating != null && ` · cần Rating ≥ ${def.minRating}`}
         </p>
+        {def.peakHourMult > 2 && (
+          <p className="mt-0.5 text-xs text-violet-700">Đơn dồn giờ cao điểm ×{def.peakHourMult} (11–13h, 19–22h)</p>
+        )}
         <p className="mt-0.5 text-xs font-bold text-emerald-700">
           {rate === null ? 'Chưa có tồn kho' : `≈ ${rate.toFixed(1)} đơn/giờ`}
           {best && ` · hợp ngành: ${IND_ICON[best.id]}×${best.a}`}

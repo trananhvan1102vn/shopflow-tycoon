@@ -24,11 +24,6 @@ export function peakMultFor(def: { peakHourMult?: number }, minute: number): num
   return peakHour(minute) ? (def.peakHourMult ?? 1) : 1;
 }
 
-/** @deprecated dùng nightMult × peakMultFor; giữ để web M1 còn biên dịch tới Task 14. */
-export function hourMult(minute: number): number {
-  return nightMult(minute) * (peakHour(minute) ? 2 : 1);
-}
-
 export function trafficEnvMult(clock: EnvClock, industryId: string): number {
   let m = 1;
   if (CAL.weekendDays.includes(clock.day)) m *= CAL.weekend.trafficMult;
