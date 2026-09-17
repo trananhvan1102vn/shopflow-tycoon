@@ -22,7 +22,9 @@ export default function WelcomeBack() {
           <Tile label="Hoàn trả" value={String(sum.ordersReturned)} />
         </div>
         <Row label="Doanh thu (đã trừ hoa hồng)" value={`+${usdCents(sum.netRevenue)}`} cls="text-emerald-700" />
-        <Row label={`Chi phí ${sum.daysSettled} ngày (thuê, bảo trì, phí kênh)`} value={`−${usdCents(sum.feesPaid)}`} cls="text-rose-600" />
+        {sum.daysSettled > 0 && (
+          <Row label={`Chi phí ${sum.daysSettled} ngày (thuê, bảo trì, phí kênh)`} value={`−${usdCents(sum.feesPaid)}`} cls="text-rose-600" />
+        )}
         {sum.eventsStarted.length > 0 && <Row label="Sự kiện bắt đầu" value={sum.eventsStarted.map(EVENT_NAME).join(', ')} />}
         {sum.eventsEnded.length > 0 && <Row label="Sự kiện đã qua" value={sum.eventsEnded.map(EVENT_NAME).join(', ')} />}
         {sum.lowStock.length > 0 && (

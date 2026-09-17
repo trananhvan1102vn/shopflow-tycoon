@@ -19,6 +19,7 @@ export default function App() {
   const game = useGame((s) => s.game);
   const booted = useGame((s) => s.booted);
   const markVisited = useGame((s) => s.markVisited);
+  const offlineSummary = useGame((s) => s.offlineSummary);
   const [tab, setTab] = useState<Tab>('kho');
   // `stageComplete` tắt ngay khi `advanceStage` chạy, nhưng overlay còn bước chọn
   // ngành phía sau → chốt cờ riêng ở đây, StageComplete tự gọi onClose khi xong.
@@ -50,7 +51,7 @@ export default function App() {
       <TutorialCard tab={tab} setTab={setTab} />
       <DayReportModal />
       <WelcomeBack />
-      {stageOverlay && <StageComplete onClose={() => setStageOverlay(false)} />}
+      {stageOverlay && !offlineSummary && <StageComplete onClose={() => setStageOverlay(false)} />}
       <Toast />
       <EventToasts />
     </div>
