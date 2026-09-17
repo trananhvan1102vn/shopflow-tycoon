@@ -1,6 +1,20 @@
-import { channels as CH, stages as ST } from '@shopflow/data';
-import type { GameState } from './types.js';
+import { channels as CH, stages as ST, suppliers as SUP, industries as IND } from '@shopflow/data';
+import type { GameState, Grade, Rng } from './types.js';
 import { modifiers } from './modifiers.js';
+
+const RETURN_RATING: Record<Grade, number> = { A: 0, B: -0.02, C: -0.05 }; // spec B2: hạng B/C −0.02/−0.05
+
+/** Chọn hạng của 1 đơn vị theo tỉ lệ tồn; mix trống/không nhất quán → B.
+ * Luôn rút đúng 1 rng.next() (kể cả khi rơi vào nhánh mặc định) để số lần gọi rng
+ * không phụ thuộc dữ liệu tồn kho — giữ tính xác định/replay của pipeline. */
+function pickGrade(mix: { A: number; B: number; C: number } | undefined, rng: Rng): Grade {
+  const total = mix ? mix.A + mix.B + mix.C : 0;
+  const roll = rng.next();
+  if (!mix || total <= 0) return 'B';
+  let x = roll * total;
+  for (const g of ['A', 'B', 'C'] as Grade[]) { x -= mix[g]; if (x < 0) return g; }
+  return 'C';
+}
 
 type Equip = { type: 'shelf' | 'packer' | 'robot'; level: 1 | 2 | 3 };
 
@@ -43,27 +57,41 @@ export function commissionOf(s: GameState, channelId: string): number {
 }
 
 /** Đóng gói giao: capacity đơn / giây thực (dt=4 phút game = 1 giây thực). */
-export function fulfilOrders(s: GameState, dtGameMinutes: number): GameState {
+export function fulfilOrders(s: GameState, dtGameMinutes: number, rng: Rng): GameState {
   let accum = s.packAccum + packCapacityPerSecond(s) * (dtGameMinutes / 4);
   let n = Math.floor(accum);
   if (n <= 0) return { ...s, packAccum: accum };
   accum -= n;
   const inventory = { ...s.inventory };
+  const grades = { ...s.inventoryGrades };
   const dayRevenue = { ...s.dayRevenue }, dayOrders = { ...s.dayOrders };
-  let { money, rating, dayCommission, onTimeStreak, completedOrders } = s;
+  let { money, rating, dayCommission, onTimeStreak, completedOrders, returnedOrders, dayRefunds } = s;
   const channels = s.channels.map((c) => ({ ...c }));
   const remaining = [] as typeof s.orders;
   for (const o of s.orders) {
     if (n > 0 && (inventory[o.productId] ?? 0) > 0) {
       n--;
       inventory[o.productId]--;
-      const revenue = Math.round(o.value * (1 + comboBonus(onTimeStreak)));
-      const comAmt = Math.round(revenue * commissionOf(s, o.channelId));
-      money += revenue - comAmt;
-      dayRevenue[o.channelId] = (dayRevenue[o.channelId] ?? 0) + revenue;
+      const g = pickGrade(grades[o.productId], rng);
+      if (grades[o.productId]) { grades[o.productId] = { ...grades[o.productId], [g]: Math.max(0, grades[o.productId][g] - 1) }; }
+      const ind = (IND.industries as any[]).find((i) => i.id === o.industryId);
+      const returnRate = (SUP.grades as any)[g].returnRate + (ind?.traits?.returnRateBonus ?? 0);
+      const returned = rng.next() < returnRate;
+      if (returned) {
+        returnedOrders++; dayRefunds += o.value;
+        if (g === 'A') {
+          inventory[o.productId]++;
+          if (grades[o.productId]) grades[o.productId] = { ...grades[o.productId], A: grades[o.productId].A + 1 };
+        } else rating = Math.max(ST.rating.min, rating + RETURN_RATING[g]);
+      } else {
+        const revenue = Math.round(o.value * (1 + comboBonus(onTimeStreak)));
+        const comAmt = Math.round(revenue * commissionOf(s, o.channelId));
+        money += revenue - comAmt;
+        dayRevenue[o.channelId] = (dayRevenue[o.channelId] ?? 0) + revenue;
+        dayCommission += comAmt;
+        rating = Math.min(ST.rating.max, rating + ST.rating.perDelivered);
+      }
       dayOrders[o.channelId] = (dayOrders[o.channelId] ?? 0) + 1;
-      dayCommission += comAmt;
-      rating = Math.min(ST.rating.max, rating + ST.rating.perDelivered);
       onTimeStreak++;
       completedOrders++;
       const ch = channels.find((c) => c.id === o.channelId);
@@ -71,8 +99,8 @@ export function fulfilOrders(s: GameState, dtGameMinutes: number): GameState {
     } else remaining.push(o);
   }
   return {
-    ...s, packAccum: accum, inventory, orders: remaining, money, rating,
-    dayRevenue, dayOrders, dayCommission, onTimeStreak, completedOrders,
+    ...s, packAccum: accum, inventory, inventoryGrades: grades, orders: remaining, money, rating,
+    dayRevenue, dayOrders, dayCommission, onTimeStreak, completedOrders, returnedOrders, dayRefunds,
     channels, combo: comboBonus(onTimeStreak), bestCombo: Math.max(s.bestCombo, comboBonus(onTimeStreak)),
   };
 }

@@ -54,6 +54,7 @@ export function runAudits(s: GameState, dtGameMinutes: number): GameState {
   let space = shelfCapacity(s) - Object.values(s.inventory).reduce((a, b) => a + b, 0);
   if (space <= 0) return s;
   const inventory = { ...s.inventory };
+  const grades = { ...s.inventoryGrades };
   const deliveries = s.deliveries.map((d) => ({ ...d, items: { ...d.items } }));
   for (const d of deliveries) {
     if (d.state !== 'auditing') continue;
@@ -68,11 +69,15 @@ export function runAudits(s: GameState, dtGameMinutes: number): GameState {
     let left = n;
     for (const pid of Object.keys(d.items)) {
       const take = Math.min(d.items[pid], left);
-      if (take > 0) { d.items[pid] -= take; inventory[pid] = (inventory[pid] ?? 0) + take; left -= take; }
+      if (take > 0) {
+        d.items[pid] -= take; inventory[pid] = (inventory[pid] ?? 0) + take; left -= take;
+        const g = grades[pid] ? { ...grades[pid] } : { A: 0, B: 0, C: 0 };
+        g[d.grade] += take; grades[pid] = g;
+      }
     }
   }
   const remaining = deliveries.filter((d) => d.state !== 'auditing' || Object.values(d.items).some((v) => v > 0));
   const unchecked = remaining.filter((d) => d.state === 'auditing')
     .reduce((a, d) => a + Object.values(d.items).reduce((x, y) => x + y, 0), 0);
-  return { ...s, deliveries: remaining, inventory, unchecked };
+  return { ...s, deliveries: remaining, inventory, inventoryGrades: grades, unchecked };
 }

@@ -16,7 +16,7 @@ export function tick(s: GameState, dtGameMinutes: number, rng: Rng): GameState {
     next.orderGenAccum -= 40;
   }
   next = runAudits(next, dtGameMinutes);
-  next = fulfilOrders(next, dtGameMinutes);
+  next = fulfilOrders(next, dtGameMinutes, rng);
   next = expireSla(next, dtGameMinutes);
   const regen = modifiers(next).ratingRegenPerHour;
   if (regen > 0) next.rating = Math.min(ST.rating.max, next.rating + regen * (dtGameMinutes / 60));
