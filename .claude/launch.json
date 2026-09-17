@@ -1,2 +1,17 @@
-{ "version": "0.0.1", "configurations": [
-  { "name": "web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@shopflow/web", "dev"], "port": 5173 } ] }
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@shopflow/web", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "web-preview-pages",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@shopflow/web", "exec", "vite", "preview", "--base", "/shopflow-tycoon/", "--port", "4173", "--strictPort"],
+      "port": 4173
+    }
+  ]
+}

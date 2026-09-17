@@ -26,3 +26,9 @@ docs            # kịch bản + mockup PNG
 
 ## Lộ trình
 M0 scaffold ✅ → M1 sim màn 1–2 + UI Kho/Nhập/Bán hàng ✅ (hoàn thành 2026-08-25) → M2 đủ 6 màn + sự kiện → M3 Capacitor iOS/Android + cloud save → M4 beta → M5 launch.
+
+## Deploy (GitHub Pages)
+- Repo: https://github.com/trananhvan1102vn/shopflow-tycoon — mỗi lần push lên `master`, workflow `.github/workflows/deploy.yml` chạy `pnpm test`, build web app với `BASE_PATH=/shopflow-tycoon/` rồi publish `apps/web/dist`.
+- URL: https://trananhvan1102vn.github.io/shopflow-tycoon/
+- Lần đầu: nếu workflow báo lỗi Pages chưa bật → Settings → Pages → Source: **GitHub Actions**, rồi chạy lại workflow.
+- Build local giống Pages: `BASE_PATH=/shopflow-tycoon/ pnpm --filter @shopflow/web build` (không đặt BASE_PATH thì base là `/`, dùng cho `pnpm dev`).
