@@ -19,8 +19,8 @@ function startLoop() {
 }
 
 const ACTIONS: Record<string, (...a: any[]) => GameState> = {
-  buyRetail: (...a) => A.buyRetail(state!, ...(a as [string, number, string])),
-  buyBundle: (...a) => A.buyBundle(state!, ...(a as [string, string, string, string?])),
+  buyRetail: (...a) => A.buyRetail(state!, ...(a as [string, number, A.PurchaseOpts])),
+  buyBundle: (...a) => A.buyBundle(state!, ...(a as [string, string, A.PurchaseOpts])),
   placeEquipment: (...a) => A.placeEquipment(state!, ...(a as [number, 'shelf' | 'packer' | 'robot'])),
   upgradeEquipment: (...a) => A.upgradeEquipment(state!, ...(a as [number])),
   removeEquipment: (...a) => A.removeEquipment(state!, ...(a as [number])),

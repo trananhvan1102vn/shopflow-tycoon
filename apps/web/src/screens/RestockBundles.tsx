@@ -85,7 +85,7 @@ export default function RestockBundles() {
             dayOfYear(seasonal.window[1][0], seasonal.window[1][1]) -
             dayOfYear(game.clock.month, game.clock.day)
           }
-          onBuy={() => dispatch('buyBundle', ind.id, cheapest.id, carrierId, seasonal.id)}
+          onBuy={() => dispatch('buyBundle', ind.id, cheapest.id, { carrierId, seasonalId: seasonal.id })}
         />
       )}
 
@@ -121,7 +121,7 @@ export default function RestockBundles() {
                 {locked ? (
                   <span className="shrink-0 text-xs font-bold text-slate-500">Màn {b.unlockStage}</span>
                 ) : (
-                  <button onClick={() => dispatch('buyBundle', ind.id, b.id, carrierId)}
+                  <button onClick={() => dispatch('buyBundle', ind.id, b.id, { carrierId })}
                     className="shrink-0 rounded-xl bg-emerald-700 px-5 py-2 text-sm font-bold text-white">
                     Mua
                   </button>

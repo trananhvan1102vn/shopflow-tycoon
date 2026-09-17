@@ -35,7 +35,7 @@ export default function RestockRetail() {
     setQty((q) => ({ ...q, [pid]: Math.max(0, Math.min(MAX, (q[pid] ?? 0) + d * STEP)) }));
 
   const order = () => {
-    for (const [pid, q] of lines) dispatch('buyRetail', pid, q, carrierId);
+    for (const [pid, q] of lines) dispatch('buyRetail', pid, q, { carrierId });
     setQty({});
   };
 

@@ -35,12 +35,12 @@ function botAct(s: GameState): GameState {
   const afford = (cost: number) => s.money >= cost + 3000 && budget >= cost;
 
   // Starter (1 ngày) là xương sống: về kịp ngày hôm sau, kho không đứt hàng.
-  if (onHand + soon < 25 && afford(6000 + 2000)) return buyBundle(s, 'electronics', 'starter', 'standard');
+  if (onHand + soon < 25 && afford(6000 + 2000)) return buyBundle(s, 'electronics', 'starter', { carrierId: 'standard' });
   // Power (2 ngày) là lô giá trị cao, chỉ mua khi đã có đệm tiền.
-  if (onHand + inbound < 45 && s.money >= 20000 && afford(12000 + 2000)) return buyBundle(s, 'electronics', 'power', 'standard');
+  if (onHand + inbound < 45 && s.money >= 20000 && afford(12000 + 2000)) return buyBundle(s, 'electronics', 'power', { carrierId: 'standard' });
   // Cứu hộ: mua lẻ khi kho gần cạn.
   const unit = retailUnitPrice(s, 'phone_case');
-  if (onHand + inbound < 12 && afford(unit * 10 + 2000)) return buyRetail(s, 'phone_case', 10, 'standard');
+  if (onHand + inbound < 12 && afford(unit * 10 + 2000)) return buyRetail(s, 'phone_case', 10, { carrierId: 'standard' });
   return s;
 }
 
