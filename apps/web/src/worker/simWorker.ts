@@ -68,7 +68,12 @@ self.onmessage = (ev: MessageEvent) => {
     (self as any).postMessage({ type: 'nosave' });
     return;
   }
-  if (msg.type === 'start') { state = createGame(msg.seed, msg.industryId); rng = makeRng(msg.seed); startLoop(); post(); }
+  if (msg.type === 'start') {
+    state = createGame(msg.seed, msg.industryId);
+    rng = makeRng(msg.seed);
+    paused = false; speed = 1;
+    startLoop(); post();
+  }
   if (msg.type === 'setPaused') paused = msg.paused;
   if (msg.type === 'setSpeed') speed = msg.speed === 2 ? 2 : 1;
   if (msg.type === 'resume') resume(msg.elapsedMs ?? 0);

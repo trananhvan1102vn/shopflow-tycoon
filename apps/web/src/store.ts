@@ -9,6 +9,7 @@ interface GameStore {
   game: GameState | null;
   paused: boolean;        // trạng thái worker thực tế (người chơi bấm, hoặc tự dừng khi ẩn tab / chờ Nhận)
   userPaused: boolean;    // người chơi tự bấm ⏸ — không tự chạy lại khi quay về tab
+  modalPaused: boolean;   // một modal (vd. báo cáo cuối ngày) đang mở — không tự chạy lại khi quay về tab
   speed: 1 | 2;
   booted: boolean;
   hasSave: boolean;
@@ -49,32 +50,46 @@ export const useGame = create<GameStore>((set, get) => {
     const g = get().game;
     if (g) localStorage.setItem(SAVE_KEY, JSON.stringify({ seed: get().seed, version: SAVE_VERSION, savedAt: Date.now(), state: g }));
   };
-  setInterval(save, 60_000);
+  const saveTimer = setInterval(save, 60_000);
 
   const pauseWorker = (paused: boolean) => { set({ paused }); w.postMessage({ type: 'setPaused', paused }); };
   let hiddenAt: number | null = null;
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { save(); hiddenAt = Date.now(); pauseWorker(true); return; }
+    if (document.hidden) {
+      save();
+      hiddenAt = Date.now();
+      // Chưa có game (vd. đang ở màn chọn ngành) → không có gì để tạm dừng;
+      // tránh việc worker bị kẹt paused=true khi `start` chạy sau khi quay lại.
+      if (get().game) pauseWorker(true);
+      return;
+    }
     const elapsed = hiddenAt ? Date.now() - hiddenAt : 0; hiddenAt = null;
     if (!get().game) return;
+    // Đã có tóm tắt offline đang chờ người chơi bấm Nhận → nó vẫn là nguồn sự thật
+    // (worker đã tự pause khi gửi tóm tắt); không gửi resume nữa kẻo tua đè lên.
+    if (get().offlineSummary) return;
     w.postMessage({ type: 'resume', elapsedMs: elapsed });
-    // Dưới 1 phút worker không gửi tóm tắt → tự chạy lại nếu người chơi không tự dừng.
-    if (elapsed < 60_000 && !get().userPaused) pauseWorker(false);
+    // Dưới 1 phút worker không gửi tóm tắt → tự chạy lại, trừ khi người chơi tự dừng
+    // hoặc một modal (vd. báo cáo cuối ngày) đang mở.
+    if (elapsed < 60_000 && !get().userPaused && !get().modalPaused) pauseWorker(false);
   });
   window.addEventListener('pagehide', save);
 
   return {
-    game: null, paused: false, userPaused: false, speed: 1, booted: false, hasSave: saved !== null, seed,
+    game: null, paused: false, userPaused: false, modalPaused: false, speed: 1, booted: false, hasSave: saved !== null, seed,
     offlineSummary: null, supplierId: 'local', grade: 'B', visited: [],
     dispatch: (name, ...args) => w.postMessage({ type: 'action', name, args }),
     start: (industryId) => w.postMessage({ type: 'start', seed: get().seed, industryId }),
     setPaused: (paused) => { set({ userPaused: paused }); pauseWorker(paused); },
-    setModalPaused: pauseWorker,
+    setModalPaused: (paused) => { set({ modalPaused: paused }); pauseWorker(paused); },
     setSpeed: (speed) => { set({ speed }); w.postMessage({ type: 'setSpeed', speed }); },
-    dismissOffline: () => { set({ offlineSummary: null }); if (!get().userPaused) pauseWorker(false); },
+    dismissOffline: () => {
+      set({ offlineSummary: null });
+      if (!get().userPaused && !get().modalPaused) pauseWorker(false);
+    },
     setSupplier: (supplierId) => set({ supplierId }),
     setGrade: (grade) => set({ grade }),
     markVisited: (t) => { if (!get().visited.includes(t)) set({ visited: [...get().visited, t] }); },
-    newGame: () => { localStorage.removeItem(SAVE_KEY); w.terminate(); location.reload(); },
+    newGame: () => { clearInterval(saveTimer); localStorage.removeItem(SAVE_KEY); w.terminate(); location.reload(); },
   };
 });
