@@ -1,7 +1,7 @@
 import { industries as IND, stages as ST, upgrades as UP } from '@shopflow/data';
 import type { GameState, Order, Rng } from './types.js';
 import { orderRate, channelWeights } from './formulas.js';
-import { trafficEnvMult, retailEnvMult, hourMult } from './env.js';
+import { trafficEnvMult, retailEnvMult, nightMult } from './env.js';
 import { modifiers } from './modifiers.js';
 
 function pickWeighted(weights: [string, number][], rng: Rng): string {
@@ -21,7 +21,7 @@ export function genOrders(s: GameState, rng: Rng): GameState {
     const ind = IND.industries.find((i: any) => i.id === indId)!;
     const weights = channelWeights(s, indId);
     if (!weights.length) continue;
-    const env = trafficEnvMult(s.clock, indId) * hourMult(s.clock.minute);
+    const env = trafficEnvMult(s.clock, indId) * nightMult(s.clock.minute);
     const retailM = retailEnvMult(s.clock, indId);
     for (const p of ind.products) {
       if (((p as any).unlockStage ?? 1) > s.stage) continue;

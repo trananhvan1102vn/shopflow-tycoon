@@ -60,3 +60,14 @@ describe('channels', () => {
     expect(s.channels.find(c => c.id === 'mall')!.ratingLocked).toBe(false);
   });
 });
+
+describe('SocialShop peak ×3 (per-channel hour multiplier)', () => {
+  it('at 12:00 social weight is 3× its base K×A, flea is 2×', () => {
+    const s = createGame(42, 'fashion'); s.stage = 3; s.money = 10_000_000;
+    const s2 = openChannel(s, 'social');
+    const w = (minute: number) => Object.fromEntries(channelWeights({ ...s2, clock: { ...s2.clock, minute } }, 'fashion'));
+    const day = w(9 * 60), noon = w(12 * 60);
+    expect(noon.social / day.social).toBeCloseTo(3);
+    expect(noon.flea / day.flea).toBeCloseTo(2);
+  });
+});

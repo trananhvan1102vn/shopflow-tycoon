@@ -30,3 +30,13 @@ describe('env multipliers', () => {
     expect(retailEnvMult(at(3, 3), 'electronics')).toBeCloseTo(2);
   });
 });
+
+import { nightMult, peakMultFor } from '../src/env.js';
+describe('nightMult / peakMultFor', () => {
+  it('night ×0.5, day 1; peak per channel', () => {
+    expect(nightMult(3 * 60)).toBe(0.5); expect(nightMult(12 * 60)).toBe(1);
+    expect(peakMultFor({ peakHourMult: 3 }, 12 * 60)).toBe(3);
+    expect(peakMultFor({ peakHourMult: 3 }, 9 * 60)).toBe(1);
+    expect(peakMultFor({}, 12 * 60)).toBe(1);
+  });
+});

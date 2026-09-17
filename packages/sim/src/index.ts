@@ -1,6 +1,6 @@
 export * from './types.js';
 export { tick } from './tick.js';
-export { settleDay } from './settleDay.js';
+export { settleDay, rollMarketCycle } from './settleDay.js';
 export { createGame } from './create.js';
 export { orderRate } from './formulas.js';
 export { genOrders } from './orders.js';
@@ -12,3 +12,4 @@ export { fulfilOrders, expireSla, comboBonus, packCapacityPerSecond, commissionO
 export { checkStage } from './stageCheck.js';
 export * from './suppliers.js';
 export * from './modifiers.js';
+export * from './quests.js';

@@ -13,11 +13,20 @@ export function activeEvents(month: number, day: number): CalEvent[] {
 const hits = (e: CalEvent, industryId: string) =>
   e.industries === 'all' || (e.industries as string[]).includes(industryId);
 
+const peakHour = (minute: number) => CAL.hourly.peakHours.includes(Math.floor(minute / 60) % 24);
+
+export function nightMult(minute: number): number {
+  return CAL.hourly.nightHours.includes(Math.floor(minute / 60) % 24) ? CAL.hourly.nightMult : 1;
+}
+
+/** Hệ số giờ cao điểm riêng từng kênh (spec B5: SocialShop ×3, còn lại ×2). */
+export function peakMultFor(def: { peakHourMult?: number }, minute: number): number {
+  return peakHour(minute) ? (def.peakHourMult ?? 1) : 1;
+}
+
+/** @deprecated dùng nightMult × peakMultFor; giữ để web M1 còn biên dịch tới Task 14. */
 export function hourMult(minute: number): number {
-  const h = Math.floor(minute / 60) % 24;
-  if (CAL.hourly.peakHours.includes(h)) return 2; // flea/mall peakHourMult; social ×3 comes at màn 3
-  if (CAL.hourly.nightHours.includes(h)) return CAL.hourly.nightMult;
-  return 1;
+  return nightMult(minute) * (peakHour(minute) ? 2 : 1);
 }
 
 export function trafficEnvMult(clock: EnvClock, industryId: string): number {
