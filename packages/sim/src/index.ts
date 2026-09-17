@@ -13,3 +13,4 @@ export { checkStage } from './stageCheck.js';
 export * from './suppliers.js';
 export * from './modifiers.js';
 export * from './quests.js';
+export * from './tutorial.js';
