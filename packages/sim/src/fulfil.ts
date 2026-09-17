@@ -1,5 +1,6 @@
 import { channels as CH, stages as ST } from '@shopflow/data';
 import type { GameState } from './types.js';
+import { modifiers } from './modifiers.js';
 
 type Equip = { type: 'shelf' | 'packer' | 'robot'; level: 1 | 2 | 3 };
 
@@ -15,6 +16,7 @@ const neighbors = (i: number, size: number): number[] => {
 export function packCapacityPerSecond(s: GameState): number {
   const cells = s.grid.cells;
   const hasShelf = cells.some((c) => c?.type === 'shelf');
+  const mod = modifiers(s);
   let cap = 0;
   cells.forEach((c, i) => {
     if (!c || c.type === 'pile') return;
@@ -22,7 +24,7 @@ export function packCapacityPerSecond(s: GameState): number {
     if (e.type === 'packer') cap += ST.warehouse.packer.levels[e.level - 1].speed;
     if (e.type === 'robot' && hasShelf) {
       const adj = neighbors(i, s.grid.size).some((j) => cells[j]?.type === 'shelf');
-      cap += ST.warehouse.robot.levels[e.level - 1].speed * (adj ? 1 + ST.warehouse.robot.adjacentShelfBonus : 1);
+      cap += ST.warehouse.robot.levels[e.level - 1].speed * (adj ? 1 + ST.warehouse.robot.adjacentShelfBonus : 1) * mod.robotSpeed;
     }
   });
   return cap;
@@ -36,6 +38,7 @@ export function commissionOf(s: GameState, channelId: string): number {
   const st = s.channels.find((c) => c.id === channelId);
   let com = def.commission;
   if (st && st.level >= 3) com += CH.levelBonus['3'].commissionDelta;
+  com += modifiers(s).commissionDelta;
   return Math.max(0, com);
 }
 
@@ -75,17 +78,18 @@ export function fulfilOrders(s: GameState, dtGameMinutes: number): GameState {
 }
 
 export function expireSla(s: GameState, dtGameMinutes: number): GameState {
+  const penalty = ST.rating.perCancelled * modifiers(s).cancelPenaltyMult;
   let rating = s.rating, streak = s.onTimeStreak, expired = 0;
   const orders = s.orders.flatMap((o) => {
     const slaLeft = o.slaLeft - dtGameMinutes;
     if (slaLeft <= 0) {
       expired++;
-      rating = Math.max(ST.rating.min, rating + ST.rating.perCancelled);
+      rating = Math.max(ST.rating.min, rating + penalty);
       streak = 0;
       return [];
     }
     return [{ ...o, slaLeft }];
   });
   if (!expired) return { ...s, orders };
-  return { ...s, orders, rating, onTimeStreak: streak, combo: comboBonus(streak) };
+  return { ...s, orders, rating, onTimeStreak: streak, combo: comboBonus(streak), cancelledOrders: s.cancelledOrders + expired };
 }

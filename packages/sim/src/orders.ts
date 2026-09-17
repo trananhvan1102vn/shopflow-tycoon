@@ -2,6 +2,7 @@ import { industries as IND, stages as ST, upgrades as UP } from '@shopflow/data'
 import type { GameState, Order, Rng } from './types.js';
 import { orderRate, channelWeights } from './formulas.js';
 import { trafficEnvMult, retailEnvMult, hourMult } from './env.js';
+import { modifiers } from './modifiers.js';
 
 function pickWeighted(weights: [string, number][], rng: Rng): string {
   const total = weights.reduce((a, [, w]) => a + w, 0);
@@ -15,6 +16,7 @@ export function genOrders(s: GameState, rng: Rng): GameState {
   const stage = ST.stages[s.stage - 1];
   const orders = [...s.orders];
   let seq = s.orderSeq;
+  const mod = modifiers(s);
   for (const indId of s.industries) {
     const ind = IND.industries.find((i: any) => i.id === indId)!;
     const weights = channelWeights(s, indId);
@@ -33,7 +35,7 @@ export function genOrders(s: GameState, rng: Rng): GameState {
         const order: Order = {
           id: `o${++seq}`, productId: p.id, industryId: indId,
           channelId: pickWeighted(weights, rng),
-          value: Math.round(p.retail * retailM),
+          value: Math.round(p.retail * retailM * mod.retail),
           slaLeft: stage.sla, state: 'queued',
         };
         orders.push(order);

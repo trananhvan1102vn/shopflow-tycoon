@@ -1,5 +1,6 @@
 import { channels as CH, industries as IND, stages as ST } from '@shopflow/data';
 import type { GameState } from './types.js';
+import { modifiers } from './modifiers.js';
 
 /** trafficK hiệu dụng của một kênh sau khi áp levelBonus (dùng chung cho orderRate & channelWeights). */
 export function levelK(def: { trafficK: number }, level: number): number {
@@ -20,7 +21,7 @@ export function orderRate(s: GameState, industryId: string, seoScore: number, en
     channelSum += levelK(def, c.level) * a;
   }
   const ratingMult = 0.6 + 0.1 * s.rating; // ST.rating.trafficFormula
-  return (seoScore / 5) * ind.V * channelSum * ratingMult * envMult;
+  return (seoScore / 5) * ind.V * channelSum * ratingMult * envMult * modifiers(s).traffic;
 }
 
 /** Trọng số gán đơn vào kênh (B5). */

@@ -205,6 +205,15 @@ export function buySeo(s: GameState, industryId: string): GameState {
   return ok({ ...s, money: s.money - next.cost, seo: { ...s.seo, [industryId]: next.score } });
 }
 
+export function buyUpgrade(s: GameState, id: string): GameState {
+  const def = (UP.upgrades as any[]).find((u) => u.id === id);
+  if (!def) return reject(s, 'Không có nâng cấp này');
+  if (s.stage < 3) return reject(s, 'Nâng cấp mở ở màn 3');
+  if (s.upgrades.includes(id)) return reject(s, 'Đã mua nâng cấp này');
+  if (s.money < def.cost) return reject(s, 'Không đủ tiền');
+  return ok({ ...s, money: s.money - def.cost, dayPurchases: s.dayPurchases + def.cost, upgrades: [...s.upgrades, id] });
+}
+
 export function chooseIndustry(s: GameState, industryId: string): GameState {
   const ind = IND.industries.find((i: any) => i.id === industryId);
   if (!ind || ind.unlock !== 'start-option') return reject(s, 'Ngành này chưa thể mở');

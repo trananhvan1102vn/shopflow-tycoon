@@ -11,3 +11,4 @@ export { advanceShipping, runAudits, shelfCapacity, packerSpeedTotal } from './l
 export { fulfilOrders, expireSla, comboBonus, packCapacityPerSecond, commissionOf } from './fulfil.js';
 export { checkStage } from './stageCheck.js';
 export * from './suppliers.js';
+export * from './modifiers.js';
