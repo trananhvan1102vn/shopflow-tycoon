@@ -30,6 +30,7 @@ function makeDelivery(s: GameState, items: Record<string, number>, cost: Cents, 
   const d: Delivery = {
     id: `d${s.deliverySeq + 1}`, items, grade: 'B', supplierId: 'local', carrierId,
     cost, state: daysLeft === 0 ? 'auditing' : 'shipping', daysLeft, itemsTotal, itemsChecked: 0,
+    riskResolved: daysLeft === 0,
   };
   const next = {
     ...s, deliverySeq: s.deliverySeq + 1,

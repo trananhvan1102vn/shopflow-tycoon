@@ -52,6 +52,7 @@ recessionClean: boolean;          // no unpaid-fee suspension since the current 
 tutorial: { step: number; done: boolean; rewarded: boolean }; // step 0..8
 questsDone: string[];             // quest ids already rewarded
 dayRefunds: Cents; dayQuestBonus: Cents; // day accumulators, reset at settle
+survivedRecession: boolean; retailLotsBought: number; bundleLotsBought: number; // added in plan Task 1 for quest/tutorial predicates
 ```
 
 `Delivery` gains `riskResolved: boolean` and `risk?: 'delay' | 'customs' | 'loss'`. `DayReport` gains `refunds: Cents` (informational) and `questBonus: Cents` (folded into `net`).

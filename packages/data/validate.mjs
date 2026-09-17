@@ -24,4 +24,14 @@ for (const c of d.channels.channels)
 const p = d.calendar.marketCycle.states.reduce((s, x) => s + x.p, 0);
 if (Math.abs(p - 1) > 1e-9) die('tổng xác suất chu kỳ = ' + p);
 if (d.stages.stages.length !== 6) die('cần 6 stage');
+// Quests: id duy nhất toàn cục, bonus > 0, stage key hợp lệ.
+const qids = new Set();
+for (const [st, list] of Object.entries(d.stages.quests ?? {})) {
+  if (!(Number(st) >= 2 && Number(st) <= 6)) die('quests: stage key không hợp lệ ' + st);
+  for (const q of list) {
+    if (qids.has(q.id)) die('trùng quest id ' + q.id); qids.add(q.id);
+    if (!(q.bonus > 0)) die(`quest ${q.id} cần bonus > 0`);
+  }
+}
+if (!(d.stages.tutorialReward > 0)) die('tutorialReward phải > 0');
 console.log('data ok:', ids.size, 'industries,', chIds.length, 'channels,', d.calendar.events.length, 'events');

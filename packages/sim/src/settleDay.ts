@@ -32,11 +32,11 @@ export function settleDay(s: GameState): GameState {
     day: s.clock.day, month: s.clock.month,
     revenueByChannel: s.dayRevenue, ordersByChannel: s.dayOrders,
     commission: s.dayCommission, channelFees, rent, maintenance,
-    purchases: s.dayPurchases, other: 0,
+    purchases: s.dayPurchases, other: 0, refunds: s.dayRefunds, questBonus: s.dayQuestBonus,
     net: revenue - s.dayCommission - channelFees - rent - maintenance - s.dayPurchases,
   };
   return {
     ...s, money, channels: rated.map(({ fee, ...c }: any) => c), reports: [...s.reports, report],
-    dayRevenue: {}, dayOrders: {}, dayCommission: 0, dayPurchases: 0,
+    dayRevenue: {}, dayOrders: {}, dayCommission: 0, dayPurchases: 0, dayRefunds: 0, dayQuestBonus: 0,
   };
 }

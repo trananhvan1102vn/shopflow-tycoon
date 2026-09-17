@@ -15,6 +15,19 @@
     { "n": 6, "goal": null, "unlocks": ["industries-6-8-purchasable", "leaderboard"] }
   ],
   "combo": { "ordersPerStep": 10, "bonusPerStep": 0.05, "maxBonus": 0.5 },
+  "quests": {
+    "2": [
+      { "id": "open_mall",     "bonus": 5000 },
+      { "id": "buy_seasonal",  "bonus": 5000 },
+      { "id": "place_robot",   "bonus": 5000 },
+      { "id": "run_seo",       "bonus": 5000 }
+    ],
+    "3": [
+      { "id": "relationship_3",    "bonus": 20000 },
+      { "id": "survive_recession", "bonus": 20000 },
+      { "id": "profit_5_days",     "bonus": 20000 }
+    ]
+  },
   "rating": { "start": 4.0, "perDelivered": 0.02, "perCancelled": -0.1, "perCancelledWithCS": -0.05, "min": 1, "max": 5, "trafficFormula": "0.6 + 0.1 * rating" },
   "warehouse": {
     "grids": [ { "size": 3, "cost": 0 }, { "size": 4, "cost": 40000, "unlockStage": 2 }, { "size": 5, "cost": 120000, "unlockStage": 4 }, { "size": 6, "cost": 400000, "unlockStage": 5 } ],
