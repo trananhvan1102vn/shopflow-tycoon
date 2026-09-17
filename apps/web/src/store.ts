@@ -46,7 +46,14 @@ export const useGame = create<GameStore>((set, get) => {
   };
   w.postMessage({ type: 'init', save: savedRaw, elapsedMs });
 
+  // `newGame` xoá save rồi reload trang, nhưng `pagehide`/`visibilitychange`
+  // (đăng ký bên dưới, vẫn cần chạy cho autosave-khi-ẩn-tab bình thường) sẽ
+  // bắn ra đúng lúc unload với `game` vẫn còn — nếu không có cờ này, `save()`
+  // của chúng sẽ ghi lại save vừa xoá trước khi trang kịp reload.
+  let resetting = false;
+
   const save = () => {
+    if (resetting) return;
     const g = get().game;
     if (g) localStorage.setItem(SAVE_KEY, JSON.stringify({ seed: get().seed, version: SAVE_VERSION, savedAt: Date.now(), state: g }));
   };
@@ -55,6 +62,7 @@ export const useGame = create<GameStore>((set, get) => {
   const pauseWorker = (paused: boolean) => { set({ paused }); w.postMessage({ type: 'setPaused', paused }); };
   let hiddenAt: number | null = null;
   document.addEventListener('visibilitychange', () => {
+    if (resetting) return;
     if (document.hidden) {
       save();
       hiddenAt = Date.now();
@@ -90,6 +98,13 @@ export const useGame = create<GameStore>((set, get) => {
     setSupplier: (supplierId) => set({ supplierId }),
     setGrade: (grade) => set({ grade }),
     markVisited: (t) => { if (!get().visited.includes(t)) set({ visited: [...get().visited, t] }); },
-    newGame: () => { clearInterval(saveTimer); localStorage.removeItem(SAVE_KEY); w.terminate(); location.reload(); },
+    newGame: () => {
+      resetting = true;
+      clearInterval(saveTimer);
+      set({ game: null });
+      localStorage.removeItem(SAVE_KEY);
+      w.terminate();
+      location.reload();
+    },
   };
 });
