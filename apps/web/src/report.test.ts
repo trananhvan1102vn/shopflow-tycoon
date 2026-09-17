@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sparklinePoints, sparklineZeroY, unlocksAfterStage, unlockLabel } from './report';
+import { sparklinePoints, sparklineZeroY, unlocksAfterStage, unlockLabel, upgradeEffectText } from './report';
 
 describe('sparkline', () => {
   it('0 điểm → rỗng', () => {
@@ -41,5 +41,16 @@ describe('unlocks sau khi qua màn', () => {
   });
   it('màn cuối không có entry kế → rỗng', () => {
     expect(unlocksAfterStage(6)).toEqual([]);
+  });
+});
+
+describe('upgradeEffectText', () => {
+  it('renders every effect key in upgrades.json', () => {
+    expect(upgradeEffectText({ deliveryDaysMult: 0.7 })).toBe('Ngày giao ×0.7');
+    expect(upgradeEffectText({ trafficMult: 1.3 })).toBe('Khách ×1.3');
+    expect(upgradeEffectText({ robotSpeedMult: 1.5 })).toBe('Tốc độ robot ×1.5');
+    expect(upgradeEffectText({ cancelPenaltyHalf: true, ratingRegenPerHour: 0.01 })).toBe('Phạt hủy đơn ÷2 · Rating hồi +0.01/giờ');
+    expect(upgradeEffectText({ wholesaleMult: 0.85 })).toBe('Giá sỉ ×0.85');
+    expect(upgradeEffectText({ commissionDelta: -0.02 })).toBe('Hoa hồng mọi kênh −2 điểm %');
   });
 });
