@@ -3,6 +3,7 @@ import { stages as ST, industries as IND } from '@shopflow/data';
 import { useGame } from '../store';
 import { usd } from '../format';
 import { UNLOCK_LABEL, unlocksAfterStage } from '../report';
+import { questProgress, QUEST_LABEL } from '../goals';
 import IndustrySelect from './IndustrySelect';
 
 /** C13/C14 — overlay hoàn thành màn. `onClose` do App gọi để gỡ overlay. */
@@ -61,6 +62,15 @@ export default function StageComplete({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         </div>
+
+        {(() => {
+          const q = questProgress({ stage, questsDone: game.questsDone });
+          return q.total > 0 ? (
+            <ul className="mt-3 space-y-1 text-sm">
+              {q.list.map((x) => <li key={x.id} className={x.done ? 'text-emerald-700' : 'text-slate-400'}>{x.done ? '✓' : '○'} {QUEST_LABEL[x.id] ?? x.id}</li>)}
+            </ul>
+          ) : null;
+        })()}
 
         <div className="mt-4 space-y-2">
           {canPickIndustry && (

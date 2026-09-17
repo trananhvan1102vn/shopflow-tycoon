@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useGame } from './store';
 import IndustrySelect from './screens/IndustrySelect';
 import DayReportModal from './screens/DayReportModal';
+import WelcomeBack from './screens/WelcomeBack';
 import StageComplete from './screens/StageComplete';
 import Warehouse from './screens/Warehouse';
 import Restock from './screens/Restock';
@@ -48,6 +49,7 @@ export default function App() {
       <TabBar tab={tab} setTab={setTab} />
       <TutorialCard tab={tab} setTab={setTab} />
       <DayReportModal />
+      <WelcomeBack />
       {stageOverlay && <StageComplete onClose={() => setStageOverlay(false)} />}
       <Toast />
       <EventToasts />

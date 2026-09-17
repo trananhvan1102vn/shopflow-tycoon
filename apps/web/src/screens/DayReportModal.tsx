@@ -10,6 +10,7 @@ import ReportBody from './ReportBody';
 export default function DayReportModal() {
   const game = useGame((s) => s.game);
   const setModalPaused = useGame((s) => s.setModalPaused);
+  const offline = useGame((s) => s.offlineSummary);
   const reports = game?.reports;
   const prevLen = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
@@ -18,9 +19,10 @@ export default function DayReportModal() {
     const len = reports?.length ?? 0;
     // Lần chạy đầu (kể cả khi load save đã có sẵn báo cáo) chỉ ghi mốc, không bật modal.
     if (prevLen.current === null) { prevLen.current = len; return; }
+    if (offline) { prevLen.current = len; return; } // tóm tắt offline đã gồm các ngày này
     if (len > prevLen.current) { setOpen(true); setModalPaused(true); }
     prevLen.current = len;
-  }, [reports?.length, setModalPaused]);
+  }, [reports?.length, setModalPaused, offline]);
 
   if (!open || !game || !reports || reports.length === 0) return null;
   const r = reports[reports.length - 1];
