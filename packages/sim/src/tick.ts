@@ -21,7 +21,7 @@ export function tick(s: GameState, dtGameMinutes: number, rng: Rng): GameState {
   const regen = modifiers(next).ratingRegenPerHour;
   if (regen > 0) next.rating = Math.min(ST.rating.max, next.rating + regen * (dtGameMinutes / 60));
   if (next.clock.minute >= 24 * 60) {
-    next = settleDay(next);
+    next = settleDay(next, rng);
     next.clock = { ...next.clock, minute: next.clock.minute - 24 * 60, day: next.clock.day + 1 };
     if (next.clock.day > 30) { next.clock.day = 1; next.clock.month++; }
     if (next.clock.month > 12) { next.clock.month = 1; next.clock.year++; }

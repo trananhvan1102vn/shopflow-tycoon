@@ -1,5 +1,5 @@
-import { stages as ST } from '@shopflow/data';
-import type { GameState } from './types.js';
+import { stages as ST, suppliers as SUP } from '@shopflow/data';
+import type { GameState, Delivery, Rng } from './types.js';
 
 type Equip = { type: 'shelf' | 'packer' | 'robot'; level: 1 | 2 | 3 };
 const equips = (s: GameState) =>
@@ -13,11 +13,33 @@ export const shelfCapacity = (s: GameState) =>
   equips(s).filter((e) => e.type === 'shelf')
     .reduce((a, e) => a + ST.warehouse.shelf.levels[e.level - 1].cap, 0);
 
+/** Rủi ro nguồn (spec B2) — chỉ xét một lần, đêm đầu tiên lô còn đang vận chuyển. */
+function resolveRisk(d: Delivery, rng: Rng): Delivery {
+  if (d.riskResolved) return d;
+  const risk = (SUP.tiers as any[]).find((t) => t.id === d.supplierId)?.risk;
+  let out: Delivery = { ...d, riskResolved: true };
+  if (!risk) return out;
+  if (risk.delayChance != null && rng.next() < risk.delayChance)
+    out = { ...out, daysLeft: out.daysLeft + risk.delayDays, risk: 'delay' };
+  if (risk.customsChance != null) {
+    const customs = rng.next() < risk.customsChance;
+    const loss = rng.next() < risk.lossChance;
+    if (customs) out = { ...out, daysLeft: out.daysLeft + risk.customsDays, risk: 'customs' };
+    if (loss) {
+      const items = Object.fromEntries(Object.entries(out.items).map(([k, v]) => [k, Math.floor(v * (1 - risk.lossPct))]));
+      const itemsTotal = Object.values(items).reduce((a, b) => a + b, 0);
+      out = { ...out, items, itemsTotal, risk: customs ? 'customs' : 'loss' };
+    }
+  }
+  return out;
+}
+
 /** Gọi từ settleDay: xe chạy qua đêm. */
-export function advanceShipping(s: GameState): GameState {
+export function advanceShipping(s: GameState, rng: Rng): GameState {
   let unchecked = s.unchecked;
-  const deliveries = s.deliveries.map((d) => {
-    if (d.state !== 'shipping') return d;
+  const deliveries = s.deliveries.map((d0) => {
+    if (d0.state !== 'shipping') return d0;
+    const d = resolveRisk(d0, rng);
     const daysLeft = d.daysLeft - 1;
     if (daysLeft <= 0) { unchecked += d.itemsTotal; return { ...d, daysLeft: 0, state: 'auditing' as const }; }
     return { ...d, daysLeft };

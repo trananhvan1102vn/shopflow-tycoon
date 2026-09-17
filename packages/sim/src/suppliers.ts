@@ -56,3 +56,19 @@ export function addRelationshipXp(s: GameState, supplierId: string, cost: number
   return { ...s, relationships: { ...s.relationships, [supplierId]: {
     xp: cur.xp + Math.floor(cost / SUP.relationship.xpPerCents), lastPurchaseDay: absDay(s.clock) } } };
 }
+
+/** Mỗi 30 ngày không mua → tụt 1 cấp (về mốc XP của cấp dưới). Gọi ở settleDay. */
+export function decayRelationships(s: GameState): GameState {
+  const today = absDay(s.clock);
+  const idle = SUP.relationship.decayAfterIdleDays as number;
+  const levels = SUP.relationship.levels as { xp: number }[];
+  let changed = false;
+  const relationships = { ...s.relationships };
+  for (const [id, r] of Object.entries(relationships)) {
+    if (today - r.lastPurchaseDay < idle) continue;
+    const lv = relationshipLevel(s, id);
+    if (lv === 0) { relationships[id] = { ...r, lastPurchaseDay: today }; changed = true; continue; }
+    relationships[id] = { xp: levels[lv - 1].xp, lastPurchaseDay: today }; changed = true;
+  }
+  return changed ? { ...s, relationships } : s;
+}
