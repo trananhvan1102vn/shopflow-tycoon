@@ -234,7 +234,11 @@ Menu with three entries, each a sub-screen with a back button:
 
 - New actions reject with `lastReject` on funds, stage, invalid ids, invalid supplier / grade combos.
 - `fastForward` clamps ticks to `[0, 28800]`; missing `savedAt` / `hiddenAt` → no catch-up.
-- Version-1 saves are discarded with the existing "save không hợp lệ" toast → industry select.
+- Saves that fail `validateSave` (corrupt, or an older `SAVE_VERSION`) are discarded and the worker
+  answers `init` with `{ type: 'nosave', reason: 'invalid' }`. The store keeps that as `saveInvalid`
+  and the industry-select screen (`mode='start'`) shows a one-line amber notice above the cards —
+  "Bản lưu cũ không tương thích với phiên bản này nên đã được bỏ — sếp bắt đầu lại từ đầu." — so the
+  player is told why they are starting over. A plain `{ type: 'nosave' }` (no save at all) shows nothing.
 - The tutorial never blocks input; skip is always available.
 - The worker ignores unknown messages with a console warning (existing).
 

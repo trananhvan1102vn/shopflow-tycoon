@@ -1,8 +1,7 @@
 import { createGame, tick, makeRng, fastForward, type GameState, type Rng, type PurchaseOpts } from '@shopflow/sim';
 import * as A from '@shopflow/sim';
 import { validateSave } from '../save';
-
-const OFFLINE_NOTICE_MS = 60_000; // dưới 1 phút: tua âm thầm, không hiện "Chào mừng trở lại"
+import { OFFLINE_NOTICE_MS } from '../pause'; // dưới ngưỡng: tua âm thầm, không hiện "Chào mừng trở lại"
 
 let state: GameState | null = null;
 let rng: Rng | null = null;
@@ -64,8 +63,10 @@ self.onmessage = (ev: MessageEvent) => {
       resume(msg.elapsedMs ?? 0);
       return;
     }
+    // Có save nhưng không đọc được (hỏng hoặc sai version) → báo `reason` để UI
+    // nói rõ vì sao sếp lại bắt đầu từ đầu, thay vì im lặng như không có save.
     if (msg.save) console.warn('[simWorker] save không hợp lệ (hỏng hoặc sai version) → chơi mới');
-    (self as any).postMessage({ type: 'nosave' });
+    (self as any).postMessage(msg.save ? { type: 'nosave', reason: 'invalid' } : { type: 'nosave' });
     return;
   }
   if (msg.type === 'start') {

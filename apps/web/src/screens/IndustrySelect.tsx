@@ -17,6 +17,7 @@ export default function IndustrySelect({ mode = 'start', onDone }: {
   const start = useGame((s) => s.start);
   const dispatch = useGame((s) => s.dispatch);
   const owned = useGame((s) => s.game?.industries) ?? [];
+  const saveInvalid = useGame((s) => s.saveInvalid);
   const [sel, setSel] = useState<string | null>(null);
   const next = mode === 'next';
   const pickable = IND.industries.filter(
@@ -38,6 +39,12 @@ export default function IndustrySelect({ mode = 'start', onDone }: {
           ? 'Ngành mới chưa có tồn kho — dùng Nhập lẻ để thử trước khi gom sỉ.'
           : 'Đổi được trong 5 phút đầu.'}
       </p>
+      {/* Bản lưu cũ bị bỏ (hỏng hoặc sai version): nói rõ vì sao sếp lại ở màn chọn ngành. */}
+      {!next && saveInvalid && (
+        <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-xs font-bold text-amber-800">
+          Bản lưu cũ không tương thích với phiên bản này nên đã được bỏ — sếp bắt đầu lại từ đầu.
+        </p>
+      )}
       <div className="space-y-3">
         {pickable.map((i: any) => (
           <button key={i.id} onClick={() => setSel(i.id)}

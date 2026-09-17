@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { GameState, OfflineSummary } from '@shopflow/sim';
 import { SAVE_VERSION, validateSave } from './save';
+import { canRun, onVisible, OFFLINE_NOTICE_MS } from './pause';
 import type { Tab } from './components/TabBar';
 
 const SAVE_KEY = 'shopflow-save';
@@ -13,6 +14,7 @@ interface GameStore {
   speed: 1 | 2;
   booted: boolean;
   hasSave: boolean;
+  saveInvalid: boolean;   // có bản lưu nhưng hỏng / sai version → đã bỏ, chơi lại từ đầu
   seed: number;
   offlineSummary: OfflineSummary | null;
   supplierId: string; grade: 'A' | 'B' | 'C';
@@ -42,7 +44,7 @@ export const useGame = create<GameStore>((set, get) => {
       set({ game: ev.data.state, booted: true, hasSave: true,
         ...(offline ? { offlineSummary: offline, paused: true } : {}) });
     }
-    if (ev.data.type === 'nosave') set({ booted: true, hasSave: false });
+    if (ev.data.type === 'nosave') set({ booted: true, hasSave: false, saveInvalid: ev.data.reason === 'invalid' });
   };
   w.postMessage({ type: 'init', save: savedRaw, elapsedMs });
 
@@ -60,6 +62,8 @@ export const useGame = create<GameStore>((set, get) => {
   const saveTimer = setInterval(save, 60_000);
 
   const pauseWorker = (paused: boolean) => { set({ paused }); w.postMessage({ type: 'setPaused', paused }); };
+  /** Đồng bộ worker với ba cờ tạm dừng: chỉ chạy khi không cờ nào đang giữ (xem pause.ts). */
+  const syncWorker = () => pauseWorker(!canRun(get()));
   let hiddenAt: number | null = null;
   document.addEventListener('visibilitychange', () => {
     if (resetting) return;
@@ -72,29 +76,22 @@ export const useGame = create<GameStore>((set, get) => {
       return;
     }
     const elapsed = hiddenAt ? Date.now() - hiddenAt : 0; hiddenAt = null;
-    if (!get().game) return;
-    // Đã có tóm tắt offline đang chờ người chơi bấm Nhận → nó vẫn là nguồn sự thật
-    // (worker đã tự pause khi gửi tóm tắt); không gửi resume nữa kẻo tua đè lên.
-    if (get().offlineSummary) return;
-    w.postMessage({ type: 'resume', elapsedMs: elapsed });
-    // Dưới 1 phút worker không gửi tóm tắt → tự chạy lại, trừ khi người chơi tự dừng
-    // hoặc một modal (vd. báo cáo cuối ngày) đang mở.
-    if (elapsed < 60_000 && !get().userPaused && !get().modalPaused) pauseWorker(false);
+    const d = onVisible({ ...get(), hasGame: get().game !== null, elapsedMs: elapsed, noticeMs: OFFLINE_NOTICE_MS });
+    if (d.resume) w.postMessage({ type: 'resume', elapsedMs: elapsed });
+    if (d.unpause) pauseWorker(false);
   });
   window.addEventListener('pagehide', save);
 
   return {
-    game: null, paused: false, userPaused: false, modalPaused: false, speed: 1, booted: false, hasSave: saved !== null, seed,
+    game: null, paused: false, userPaused: false, modalPaused: false, speed: 1, booted: false,
+    hasSave: saved !== null, saveInvalid: false, seed,
     offlineSummary: null, supplierId: 'local', grade: 'B', visited: [],
     dispatch: (name, ...args) => w.postMessage({ type: 'action', name, args }),
     start: (industryId) => w.postMessage({ type: 'start', seed: get().seed, industryId }),
-    setPaused: (paused) => { set({ userPaused: paused }); pauseWorker(paused); },
-    setModalPaused: (paused) => { set({ modalPaused: paused }); pauseWorker(paused); },
+    setPaused: (paused) => { set({ userPaused: paused }); syncWorker(); },
+    setModalPaused: (paused) => { set({ modalPaused: paused }); syncWorker(); },
     setSpeed: (speed) => { set({ speed }); w.postMessage({ type: 'setSpeed', speed }); },
-    dismissOffline: () => {
-      set({ offlineSummary: null });
-      if (!get().userPaused && !get().modalPaused) pauseWorker(false);
-    },
+    dismissOffline: () => { set({ offlineSummary: null }); syncWorker(); },
     setSupplier: (supplierId) => set({ supplierId }),
     setGrade: (grade) => set({ grade }),
     markVisited: (t) => { if (!get().visited.includes(t)) set({ visited: [...get().visited, t] }); },
