@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { industries as IND, suppliers as SUP, calendar as CAL } from '@shopflow/data';
-import { wholesaleEnvMult, activeEvents } from '@shopflow/sim';
+import { quoteBundle, activeEvents } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usdCents } from '../format';
+import SupplierPicker from '../components/SupplierPicker';
 
 const SEASONAL_NAME: Record<string, string> = {
   valentine_gift: 'Gói quà Valentine',
@@ -19,6 +20,8 @@ const dayOfYear = (m: number, d: number) => (m - 1) * 30 + d;
 export default function RestockBundles() {
   const game = useGame((s) => s.game);
   const dispatch = useGame((s) => s.dispatch);
+  const supplierId = useGame((s) => s.supplierId);
+  const grade = useGame((s) => s.grade);
   const [industryId, setIndustryId] = useState<string | null>(null);
   const [carrierId, setCarrierId] = useState('economy');
   if (!game) return null;
@@ -27,8 +30,6 @@ export default function RestockBundles() {
   const ind = owned.find((i: any) => i.id === industryId) ?? owned[0];
   if (!ind) return null;
 
-  const carrier = SUP.carriers.find((c: any) => c.id === carrierId)!;
-  const env = wholesaleEnvMult(game.clock, ind.id);
   const retailOf = (pid: string) => ind.products.find((p: any) => p.id === pid)?.retail ?? 0;
   const nameOf = (pid: string) => ind.products.find((p: any) => p.id === pid)?.name ?? pid;
   const cheapEvent = activeEvents(game.clock.month, game.clock.day).find((e: any) => e.wholesaleMult);
@@ -50,6 +51,8 @@ export default function RestockBundles() {
 
   return (
     <div className="space-y-3">
+      <SupplierPicker />
+
       <div className="flex gap-2">
         {owned.length >= 2 && (
           <select value={ind.id} onChange={(e) => setIndustryId(e.target.value)}
@@ -74,20 +77,24 @@ export default function RestockBundles() {
         </p>
       )}
 
-      {seasonal && cheapest && (
-        <SeasonalCard
-          seasonal={seasonal}
-          bundle={cheapest}
-          env={env}
-          fee={carrier.fee}
-          bought={game.seasonalBought[seasonal.id] ?? 0}
-          daysLeft={
-            dayOfYear(seasonal.window[1][0], seasonal.window[1][1]) -
-            dayOfYear(game.clock.month, game.clock.day)
-          }
-          onBuy={() => dispatch('buyBundle', ind.id, cheapest.id, { carrierId, seasonalId: seasonal.id })}
-        />
-      )}
+      {seasonal && cheapest && (() => {
+        const qFull = quoteBundle(game, ind.id, cheapest.id, { carrierId, supplierId, grade });
+        const qSale = quoteBundle(game, ind.id, cheapest.id, { carrierId, supplierId, grade, seasonalId: seasonal.id });
+        return (
+          <SeasonalCard
+            seasonal={seasonal}
+            bundle={cheapest}
+            full={qFull.goods + qFull.ship}
+            sale={qSale.goods + qSale.ship}
+            bought={game.seasonalBought[seasonal.id] ?? 0}
+            daysLeft={
+              dayOfYear(seasonal.window[1][0], seasonal.window[1][1]) -
+              dayOfYear(game.clock.month, game.clock.day)
+            }
+            onBuy={() => dispatch('buyBundle', ind.id, cheapest.id, { carrierId, supplierId, grade, seasonalId: seasonal.id })}
+          />
+        );
+      })()}
 
       <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Gói thường · {ind.name}</h2>
 
@@ -95,17 +102,18 @@ export default function RestockBundles() {
         {ind.bundles.map((b: any) => {
           const locked = b.unlockStage > game.stage;
           const items = Object.entries(b.items as Record<string, number>);
-          const cost = Math.round(b.cost * env) + carrier.fee;
-          const days = Math.max(0, b.days + carrier.daysDelta);
+          const q = quoteBundle(game, ind.id, b.id, { carrierId, supplierId, grade });
+          const cost = q.goods + q.ship;
+          const days = q.days;
           const revenue = items.reduce((a, [pid, n]) => a + retailOf(pid) * n, 0);
           return (
             <div key={b.id} className={`rounded-xl bg-white p-3 shadow ${locked ? 'opacity-50' : ''}`}>
               <div className="flex items-start justify-between gap-2">
                 <div className="font-bold">{locked ? '🔒 ' : ''}{b.name}</div>
                 <div className="shrink-0 text-right">
-                  <div className="font-bold text-emerald-700">{usdCents(Math.round(b.cost * env))}</div>
+                  <div className="font-bold text-emerald-700">{usdCents(q.goods)}</div>
                   <div className="text-[11px] text-slate-500">
-                    + ship {usdCents(carrier.fee)} · {days === 0 ? 'về hôm nay' : `${days} ngày`}
+                    + ship {usdCents(q.ship)} · {days === 0 ? 'về hôm nay' : `${days} ngày`}
                   </div>
                 </div>
               </div>
@@ -121,7 +129,7 @@ export default function RestockBundles() {
                 {locked ? (
                   <span className="shrink-0 text-xs font-bold text-slate-500">Màn {b.unlockStage}</span>
                 ) : (
-                  <button onClick={() => dispatch('buyBundle', ind.id, b.id, { carrierId })}
+                  <button onClick={() => dispatch('buyBundle', ind.id, b.id, { carrierId, supplierId, grade })}
                     className="shrink-0 rounded-xl bg-emerald-700 px-5 py-2 text-sm font-bold text-white">
                     Mua
                   </button>
@@ -135,11 +143,9 @@ export default function RestockBundles() {
   );
 }
 
-function SeasonalCard({ seasonal, bundle, env, fee, bought, daysLeft, onBuy }: {
-  seasonal: any; bundle: any; env: number; fee: number; bought: number; daysLeft: number; onBuy: () => void;
+function SeasonalCard({ seasonal, bundle, full, sale, bought, daysLeft, onBuy }: {
+  seasonal: any; bundle: any; full: number; sale: number; bought: number; daysLeft: number; onBuy: () => void;
 }) {
-  const full = Math.round(bundle.cost * env) + fee;
-  const sale = Math.round(bundle.cost * env * (1 - seasonal.discount)) + fee;
   const left = seasonal.limit - bought;
   return (
     <div className="rounded-xl border-2 border-orange-300 bg-orange-50 p-3">
