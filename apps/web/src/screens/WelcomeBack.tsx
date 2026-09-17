@@ -30,7 +30,13 @@ export default function WelcomeBack() {
         {sum.lowStock.length > 0 && (
           <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">⚠️ Tồn thấp: {sum.lowStock.map((id) => PRODUCT_NAME[id] ?? id).join(', ')}</p>
         )}
-        {sum.stageCompleted && <p className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-bold text-emerald-800">🏆 Đã đạt mục tiêu màn trong lúc sếp vắng!</p>}
+        {sum.stageCompleted && (
+          <p className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
+            <span className="font-bold">🏆 Đã đạt mục tiêu màn trong lúc sếp vắng!</span>
+            {/* fastForward dừng ngay khi màn hoàn thành, nên số liệu trên chỉ tính tới lúc đó. */}
+            <span className="mt-1 block font-normal">Đã dừng tua vì đạt mục tiêu màn.</span>
+          </p>
+        )}
         <button onClick={dismiss} className="mt-4 w-full rounded-xl bg-emerald-700 p-3 font-bold text-white">Nhận</button>
       </div>
     </div>

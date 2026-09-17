@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { usd, usdCents, gameTime, dateStr } from './format';
+import { calendar as CAL } from '@shopflow/data';
+import { usd, usdCents, gameTime, dateStr, hourRanges } from './format';
 
 describe('format', () => {
   it('usd', () => {
@@ -16,5 +17,11 @@ describe('format', () => {
   it('gameTime/dateStr', () => {
     expect(gameTime(8 * 60)).toBe('08:00');
     expect(dateStr({ day: 6, month: 1 })).toBe('Ngày 6 · Tháng 1');
+  });
+  it('hourRanges gộp giờ liên tiếp thành khoảng', () => {
+    expect(hourRanges(CAL.hourly.peakHours)).toBe('11–13h, 19–22h');
+    expect(hourRanges([9])).toBe('9h');
+    expect(hourRanges([22, 11, 12])).toBe('11–12h, 22h');
+    expect(hourRanges([])).toBe('');
   });
 });

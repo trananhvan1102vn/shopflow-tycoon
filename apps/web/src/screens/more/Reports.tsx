@@ -24,7 +24,9 @@ export default function Reports() {
       <div className="flex items-baseline justify-between"><h1 className="text-lg font-bold">Báo cáo cuối ngày</h1>
         <span className={`text-sm font-bold ${total >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>30 ngày: {total >= 0 ? '+' : ''}{usdCents(total)}</span></div>
       {reports.length === 0 && <p className="rounded-xl bg-white p-8 text-center text-sm text-slate-500 shadow">Chưa có báo cáo nào — hết ngày đầu tiên sẽ có.</p>}
-      {reports.map((r, i) => ({ r, i })).reverse().map(({ r, i }) => (
+      {/* Chỉ 30 ngày gần nhất, mới nhất lên đầu — khớp với tổng "30 ngày" ở tiêu đề.
+          `i` vẫn là chỉ số trong `reports` để mở đúng báo cáo chi tiết. */}
+      {reports.map((r, i) => ({ r, i })).slice(-30).reverse().map(({ r, i }) => (
         <button key={i} onClick={() => setIdx(i)} className="flex w-full items-center justify-between rounded-xl bg-white p-3 text-left shadow">
           <span className="font-bold">Ngày {r.day} · Tháng {r.month}</span>
           <span className={`font-bold ${r.net >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>{r.net >= 0 ? '+' : ''}{usdCents(r.net)}</span>

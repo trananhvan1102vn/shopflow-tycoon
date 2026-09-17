@@ -24,7 +24,7 @@ export interface PurchaseOpts { carrierId: string; supplierId?: string; grade?: 
 
 const norm = (o: PurchaseOpts) => ({ carrierId: o.carrierId, supplierId: o.supplierId ?? 'local', grade: (o.grade ?? 'B') as Grade, seasonalId: o.seasonalId });
 
-/** Ngày giao (spec B3): gói + nguồn + hãng − 1 (quan hệ có daysDelta) × Định Tuyến. */
+/** Ngày giao (spec B3): gói + nguồn + hãng + daysDelta quan hệ (cộng dồn) × Định Tuyến. */
 function deliveryDays(s: GameState, baseDays: number, supplierId: string, carrierId: string): number {
   const sup = supplierDef(supplierId); const carrier = (SUP.carriers as any[]).find((c) => c.id === carrierId);
   const raw = baseDays + (sup?.extraDays ?? 0) + (carrier?.daysDelta ?? 0) + relationshipPerks(s, supplierId).daysDelta;

@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { stages as ST } from '@shopflow/data';
+import { TUTORIAL_STEPS } from '@shopflow/sim';
 import { useGame } from '../../store';
+import { usd } from '../../format';
 
 /** C11 — cài đặt: chơi lại hướng dẫn, chơi mới (xoá bản lưu). */
 export default function Settings() {
@@ -13,7 +16,12 @@ export default function Settings() {
       <h1 className="text-lg font-bold">Cài đặt</h1>
       <div className="rounded-xl bg-white p-3 shadow">
         <div className="font-bold">Hướng dẫn</div>
-        <p className="text-xs text-slate-500">Chơi lại 8 bước hướng dẫn. {game.tutorial.rewarded ? 'Thưởng $200 đã nhận, không nhận lại.' : 'Hoàn thành để nhận $200.'}</p>
+        <p className="text-xs text-slate-500">
+          Chơi lại {TUTORIAL_STEPS} bước hướng dẫn.{' '}
+          {game.tutorial.rewarded
+            ? `Thưởng ${usd(ST.tutorialReward)} đã nhận, không nhận lại.`
+            : `Hoàn thành để nhận ${usd(ST.tutorialReward)}.`}
+        </p>
         <button onClick={() => dispatch('tutorialReset')} className="mt-2 rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-700">Chơi lại hướng dẫn</button>
       </div>
       <div className="rounded-xl bg-white p-3 shadow">

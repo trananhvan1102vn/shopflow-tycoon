@@ -1,6 +1,7 @@
 import { suppliers as SUP } from '@shopflow/data';
-import { supplierUnlocked, gradeAllowed, relationshipXp, relationshipDiscount, gradeCostMult } from '@shopflow/sim';
+import { supplierUnlocked, gradeAllowed, relationshipXp, relationshipDiscount, relationshipPerks, gradeCostMult } from '@shopflow/sim';
 import { useGame } from '../store';
+import { usd } from '../format';
 
 const GRADES = ['A', 'B', 'C'] as const;
 const RISK_TEXT: Record<string, string> = {
@@ -44,7 +45,12 @@ export default function SupplierPicker() {
         {relOpen ? (() => {
           const rel = relationshipXp(game, supplierId);
           const levels = SUP.relationship.levels as any[];
-          const perks = [levels[rel.level]?.exclusiveBundle && 'hạng A giá hạng B', levels[rel.level]?.daysDelta && 'giao sớm 1 ngày'].filter(Boolean);
+          // Đặc quyền cộng dồn (sim: relationshipPerks) — mốc đã qua vẫn còn hiệu lực ở cấp cao hơn.
+          const p = relationshipPerks(game, supplierId);
+          const perks = [
+            p.exclusiveBundle && 'hạng A giá hạng B',
+            p.daysDelta < 0 && `giao sớm ${-p.daysDelta} ngày`,
+          ].filter(Boolean);
           const pctToNext = rel.nextXp === null ? 100 : Math.round(((rel.xp - levels[rel.level].xp) / (rel.nextXp - levels[rel.level].xp)) * 100);
           return (
             <>
@@ -54,7 +60,7 @@ export default function SupplierPicker() {
               </div>
               <div className="mt-1 h-1.5 rounded-full bg-slate-200"><div className="h-1.5 rounded-full bg-emerald-500" style={{ width: `${pctToNext}%` }} /></div>
               <div className="mt-1 text-slate-500">
-                {rel.nextXp === null ? 'Cấp tối đa' : `${rel.xp}/${rel.nextXp} XP · $100 chi = 1 XP`}
+                {rel.nextXp === null ? 'Cấp tối đa' : `${rel.xp}/${rel.nextXp} XP · ${usd(SUP.relationship.xpPerCents)} chi = 1 XP`}
                 {perks.length > 0 && ` · ${perks.join(' · ')}`}
               </div>
             </>
