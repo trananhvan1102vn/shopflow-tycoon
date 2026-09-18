@@ -50,6 +50,13 @@ export default function RestockInbound() {
         <Step icon="📦" label="4. Bán ra" value={game.orders.length} />
       </div>
 
+      {/* Ngưng vận chuyển hiện cả khi kho trống — người chơi cần biết xe không chạy trước khi đặt lô mới. */}
+      {resume && (
+        <div className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-800 shadow">
+          ⛔ Ngưng vận chuyển tới {resume.d}/{resume.m} — xe chạy lại sau kỳ nghỉ
+        </div>
+      )}
+
       {game.deliveries.length === 0 && (
         <p className="rounded-xl bg-white p-8 text-center text-sm text-slate-500 shadow">
           Chưa có lô hàng nào đang về. Đặt hàng ở tab <b>Nhập lẻ</b> hoặc <b>Gói sỉ</b>.

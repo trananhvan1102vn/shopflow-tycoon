@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAVE_VERSION, validateSave } from './save';
 
-const goodState = { money: 100000, packAccum: 0, orders: [], tutorial: { step: 0, done: false, rewarded: false }, questsDone: [], activeRandomEvents: [] };
+const goodState = { money: 100000, packAccum: 0, orders: [], tutorial: { step: 0, done: false, rewarded: false }, questsDone: [], activeRandomEvents: [], priceMult: {}, priceWarsWon: 0 };
 const blob = (o: any) => JSON.stringify(o);
 
 describe('validateSave', () => {
@@ -43,6 +43,19 @@ describe('validateSave', () => {
   it('v3: thiếu activeRandomEvents → null', () => {
     const { activeRandomEvents, ...noEvents } = goodState;
     expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noEvents }))).toBeNull();
+  });
+  it('v3: priceMult không phải object thuần → null (priceMultOf sẽ ném TypeError trong worker)', () => {
+    const { priceMult, ...noPm } = goodState;
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noPm }))).toBeNull();
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: { ...goodState, priceMult: null } }))).toBeNull();
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: { ...goodState, priceMult: [] } }))).toBeNull();
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: { ...goodState, priceMult: 'x' } }))).toBeNull();
+  });
+  it('v3: priceWarsWon không phải số hữu hạn → null (priceWarsWon++ sẽ ra NaN)', () => {
+    const { priceWarsWon, ...noPw } = goodState;
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noPw }))).toBeNull();
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: { ...goodState, priceWarsWon: null } }))).toBeNull();
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: { ...goodState, priceWarsWon: '3' } }))).toBeNull();
   });
   it('savedAt được trả về (null nếu thiếu / không phải số)', () => {
     expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: goodState }))!.savedAt).toBeNull();

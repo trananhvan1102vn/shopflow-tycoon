@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { industries as IND, stages as ST } from '@shopflow/data';
-import { absDay, priceWarFor } from '@shopflow/sim';
+import { priceWarFor } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usdCents } from '../format';
+import { eventDaysLeft } from '../eventText';
 import { productPriceInfo } from '../pricingView';
 
 const P = ST.pricing as { min: number; max: number; step: number; elasticity: number };
@@ -44,7 +45,7 @@ export default function SalesPricing() {
       {war && (
         <div className="rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-900 shadow">
           ⚔️ Chiến giá · đối thủ bán rẻ hơn {Math.round((1 - war.rival) * 100)}% · còn{' '}
-          {war.entry.endsDay - absDay(game.clock)} ngày · {war.entry.ordersDuring}/{war.def.minOrders ?? 0} đơn
+          {eventDaysLeft(war.entry, game.clock)} ngày · {war.entry.ordersDuring}/{war.def.minOrders ?? 0} đơn giá ≤ đối thủ
         </div>
       )}
 

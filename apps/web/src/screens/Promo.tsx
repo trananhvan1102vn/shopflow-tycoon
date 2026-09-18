@@ -1,8 +1,9 @@
 import { calendar as CAL, costs as CO, industries as IND, upgrades as UP } from '@shopflow/data';
-import { absDay, activeEventDefs, nightMult, orderRate, trafficEnvMult, type GameState } from '@shopflow/sim';
+import { activeEventDefs, type GameState } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usdCents } from '../format';
-import { eventEffectText } from '../eventText';
+import { eventDaysLeft, eventEffectText } from '../eventText';
+import { estOrdersPer10s } from '../promoView';
 
 const IND_ICON: Record<string, string> = {
   electronics: '📱', fashion: '👗', home: '🏠', books: '📚',
@@ -37,22 +38,6 @@ function nextEvent(month: number, day: number): any {
   const evs = CAL.events as any[];
   const upcoming = evs.filter((e) => key(e.to) >= today).sort((a, b) => key(a.from) - key(b.from));
   return upcoming[0] ?? evs[0];
-}
-
-/**
- * Ước tính **đơn/10 giây thực** của một ngành — cùng suy diễn như `estOrdersPerGameHour`
- * trong `SalesChannels`: mỗi lượt sinh đơn (10 giây thực), mỗi sản phẩm CÒN TỒN sinh
- * kỳ vọng `orderRate(...) / 5` đơn. Trả `null` khi ngành chưa có tồn kho (sim không sinh đơn).
- */
-function estOrdersPer10s(game: GameState, industryId: string): number | null {
-  const ind = (IND.industries as any[]).find((i) => i.id === industryId);
-  if (!ind) return null;
-  const stocked = ind.products.filter(
-    (p: any) => (p.unlockStage ?? 1) <= game.stage && (game.inventory[p.id] ?? 0) > 0,
-  ).length;
-  if (stocked === 0) return null;
-  const env = trafficEnvMult(game.clock, industryId) * nightMult(game.clock.minute);
-  return (orderRate(game, industryId, game.seo[industryId] ?? SEO_MIN, env) / 5) * stocked;
 }
 
 export default function Promo() {
@@ -146,7 +131,7 @@ export default function Promo() {
             <div key={entry.id} className="mt-1 first:mt-0">
               <p className="font-bold text-violet-900">⚡ {def.name}</p>
               <p className="mt-0.5 text-xs text-violet-700">{eventEffectText(def)}</p>
-              <p className="mt-0.5 text-xs text-violet-700">Còn {entry.endsDay - absDay(game.clock)} ngày</p>
+              <p className="mt-0.5 text-xs text-violet-700">Còn {eventDaysLeft(entry, game.clock)} ngày</p>
               {def.effects.rivalPriceMult != null && entry.industryId && (
                 <p className="mt-0.5 text-xs text-violet-700">
                   {(IND.industries as any[]).find((i) => i.id === entry.industryId)?.name ?? entry.industryId} ·{' '}
