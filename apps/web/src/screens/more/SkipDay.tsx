@@ -7,7 +7,7 @@ export default function SkipDay() {
   const game = useGame((s) => s.game);
   const skipDay = useGame((s) => s.skipDay);
   const [done, setDone] = useState(false);
-  useEffect(() => setDone(false), [game?.clock.day]);
+  useEffect(() => setDone(false), [game?.clock.day, game?.stageComplete]);
   if (!game) return null;
   const info = skipDayInfo(game);
   const h = Math.floor(info.minutesLeft / 60), m = info.minutesLeft % 60;

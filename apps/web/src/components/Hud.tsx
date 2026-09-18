@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { shelfCapacity } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usd, gameTime, dateStr } from '../format';
@@ -45,7 +46,7 @@ export default function Hud() {
         </div>
 
         {pct !== null && (
-          <button onClick={() => setSheet(true)} aria-label="Mục tiêu màn" className="mt-2 block w-full text-left">
+          <button onClick={() => setSheet(true)} className="mt-2 block w-full text-left">
             <div className="h-1 overflow-hidden rounded-full bg-white/20">
               <div className="h-full rounded-full bg-amber-300" style={{ width: `${pct}%` }} />
             </div>
@@ -56,7 +57,7 @@ export default function Hud() {
           </button>
         )}
       </div>
-      {sheet && <QuestSheet onClose={() => setSheet(false)} />}
+      {sheet && createPortal(<QuestSheet onClose={() => setSheet(false)} />, document.body)}
     </header>
   );
 }
@@ -73,7 +74,7 @@ function Tile({ value, label, title }: { value: string; label: string; title: st
 function SpeedBtn({ active, disabled, onClick, label, aria }: { active: boolean; disabled?: boolean; onClick: () => void; label: string; aria: string }) {
   return (
     <button onClick={onClick} disabled={disabled} aria-label={aria} aria-pressed={active}
-      className={`rounded-md px-2 py-1 font-bold ${active ? 'bg-white text-emerald-700 shadow' : 'text-white/80'} disabled:text-white/45`}>
+      className={`rounded-md px-2 py-1 font-bold ${active ? 'bg-white text-emerald-700 shadow' : 'text-white/90'} disabled:text-white/45`}>
       {label}
     </button>
   );
