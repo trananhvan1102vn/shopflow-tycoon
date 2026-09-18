@@ -5,6 +5,7 @@ import { shelfCapacity } from './logistics.js';
 import { modifiers } from './modifiers.js';
 import { supplierDef, supplierUnlocked, gradeAllowed, gradeCostMult, relationshipDiscount, relationshipPerks, addRelationshipXp } from './suppliers.js';
 import { checkQuests } from './quests.js';
+import { snapPriceMult } from './pricing.js';
 
 const ok = (s: GameState): GameState => checkQuests({ ...s, lastReject: null });
 const reject = (s: GameState, msg: string): GameState => ({ ...s, lastReject: msg });
@@ -271,6 +272,17 @@ export function chooseIndustry(s: GameState, industryId: string): GameState {
   if (s.industries.includes(industryId)) return reject(s, 'Ngành đã mở');
   if (s.industries.length >= s.stage) return reject(s, 'Chưa mở thêm ngành ở màn này');
   return ok({ ...s, industries: [...s.industries, industryId], seo: { ...s.seo, [industryId]: UP.seoStart } });
+}
+
+export function setPrice(s: GameState, productId: string, mult: number): GameState {
+  if (s.stage < 4) return reject(s, 'Tự đặt giá mở ở màn 4');
+  const f = findProduct(productId);
+  if (!f || !s.industries.includes(f.ind.id)) return reject(s, 'Sản phẩm không thuộc ngành của bạn');
+  if (((f.p as any).unlockStage ?? 1) > s.stage) return reject(s, `Mở ở màn ${(f.p as any).unlockStage}`);
+  const snapped = snapPriceMult(mult);
+  const priceMult = { ...s.priceMult };
+  if (snapped === 1) delete priceMult[productId]; else priceMult[productId] = snapped;
+  return ok({ ...s, priceMult });
 }
 
 export function advanceStage(s: GameState): GameState {

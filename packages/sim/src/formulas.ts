@@ -2,6 +2,7 @@ import { channels as CH, industries as IND, stages as ST } from '@shopflow/data'
 import type { GameState } from './types.js';
 import { modifiers } from './modifiers.js';
 import { peakMultFor } from './env.js';
+import { demandMult } from './pricing.js';
 
 /** trafficK hiệu dụng của một kênh sau khi áp levelBonus (dùng chung cho orderRate & channelWeights). */
 export function levelK(def: { trafficK: number }, level: number): number {
@@ -12,7 +13,7 @@ export function levelK(def: { trafficK: number }, level: number): number {
 }
 
 /** Spec B5: đơn/tick-10s cho một sản phẩm. Trả về r; số đơn = floor(r/5) + Bernoulli(frac). */
-export function orderRate(s: GameState, industryId: string, seoScore: number, envMult: number): number {
+export function orderRate(s: GameState, industryId: string, seoScore: number, envMult: number, productId?: string): number {
   const ind = IND.industries.find((i: any) => i.id === industryId)!;
   let channelSum = 0;
   for (const c of s.channels) {
@@ -22,7 +23,8 @@ export function orderRate(s: GameState, industryId: string, seoScore: number, en
     channelSum += levelK(def, c.level) * a * peakMultFor(def, s.clock.minute);
   }
   const ratingMult = 0.6 + 0.1 * s.rating; // ST.rating.trafficFormula
-  return (seoScore / 5) * ind.V * channelSum * ratingMult * envMult * modifiers(s).traffic;
+  const priceMult = productId ? demandMult(s, productId) : 1;
+  return (seoScore / 5) * ind.V * channelSum * ratingMult * envMult * modifiers(s).traffic * priceMult;
 }
 
 /** Trọng số gán đơn vào kênh (B5). */

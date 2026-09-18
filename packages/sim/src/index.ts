@@ -14,5 +14,6 @@ export * from './suppliers.js';
 export * from './modifiers.js';
 export * from './events.js';
 export * from './quests.js';
+export * from './pricing.js';
 export * from './tutorial.js';
 export * from './fastForward.js';

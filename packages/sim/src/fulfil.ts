@@ -67,6 +67,7 @@ export function fulfilOrders(s: GameState, dtGameMinutes: number, rng: Rng): Gam
   const dayRevenue = { ...s.dayRevenue }, dayOrders = { ...s.dayOrders };
   let { money, rating, dayCommission, onTimeStreak, completedOrders, returnedOrders, dayRefunds } = s;
   const channels = s.channels.map((c) => ({ ...c }));
+  const activeRandomEvents = s.activeRandomEvents.slice();
   const remaining = [] as typeof s.orders;
   for (const o of s.orders) {
     if (n > 0 && (inventory[o.productId] ?? 0) > 0) {
@@ -96,12 +97,15 @@ export function fulfilOrders(s: GameState, dtGameMinutes: number, rng: Rng): Gam
       completedOrders++;
       const ch = channels.find((c) => c.id === o.channelId);
       if (ch) ch.ordersDelivered++;
+      const warIdx = activeRandomEvents.findIndex((e) => e.industryId === o.industryId);
+      if (warIdx >= 0) activeRandomEvents[warIdx] = { ...activeRandomEvents[warIdx], ordersDuring: activeRandomEvents[warIdx].ordersDuring + 1 };
     } else remaining.push(o);
   }
   return {
     ...s, packAccum: accum, inventory, inventoryGrades: grades, orders: remaining, money, rating,
     dayRevenue, dayOrders, dayCommission, onTimeStreak, completedOrders, returnedOrders, dayRefunds,
     channels, combo: comboBonus(onTimeStreak), bestCombo: Math.max(s.bestCombo, comboBonus(onTimeStreak)),
+    activeRandomEvents,
   };
 }
 
