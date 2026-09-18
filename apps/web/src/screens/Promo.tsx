@@ -1,7 +1,8 @@
 import { calendar as CAL, costs as CO, industries as IND, upgrades as UP } from '@shopflow/data';
-import { nightMult, orderRate, trafficEnvMult, type GameState } from '@shopflow/sim';
+import { absDay, activeEventDefs, nightMult, orderRate, trafficEnvMult, type GameState } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usdCents } from '../format';
+import { eventEffectText } from '../eventText';
 
 const IND_ICON: Record<string, string> = {
   electronics: '📱', fashion: '👗', home: '🏠', books: '📚',
@@ -136,6 +137,26 @@ export default function Promo() {
           )}
         </div>
       </div>
+
+      {/* ---- Sự kiện ngẫu nhiên đang diễn ra (màn 4+, spec Phase 2) ---- */}
+      {game.activeRandomEvents.length > 0 && (
+        <div className="rounded-xl bg-violet-50 p-3">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-violet-500">Đang diễn ra</h2>
+          {activeEventDefs(game).map(({ def, entry }) => (
+            <div key={entry.id} className="mt-1 first:mt-0">
+              <p className="font-bold text-violet-900">⚡ {def.name}</p>
+              <p className="mt-0.5 text-xs text-violet-700">{eventEffectText(def)}</p>
+              <p className="mt-0.5 text-xs text-violet-700">Còn {entry.endsDay - absDay(game.clock)} ngày</p>
+              {def.effects.rivalPriceMult != null && entry.industryId && (
+                <p className="mt-0.5 text-xs text-violet-700">
+                  {(IND.industries as any[]).find((i) => i.id === entry.industryId)?.name ?? entry.industryId} ·{' '}
+                  {entry.ordersDuring}/{def.minOrders} đơn
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ---- Lịch tháng ---- */}
       <div className="rounded-xl bg-white p-3 shadow">

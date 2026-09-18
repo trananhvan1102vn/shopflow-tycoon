@@ -2,7 +2,7 @@ export * from './types.js';
 export { tick } from './tick.js';
 export { settleDay, rollMarketCycle } from './settleDay.js';
 export { createGame } from './create.js';
-export { orderRate } from './formulas.js';
+export { orderRate, levelK } from './formulas.js';
 export { genOrders } from './orders.js';
 export { makeRng } from './rng.js';
 export * from './env.js';

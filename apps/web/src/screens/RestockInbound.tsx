@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { industries as IND, suppliers as SUP } from '@shopflow/data';
-import type { Delivery } from '@shopflow/sim';
+import { logisticsSuspended, type Delivery } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usdCents } from '../format';
 
@@ -11,6 +11,21 @@ const PRODUCT_NAME: Record<string, string> = Object.fromEntries(
 const carrierName = (id: string) => SUP.carriers.find((c: any) => c.id === id)?.name ?? id;
 const SUPPLIER_NAME = (id: string) => (SUP.tiers as any[]).find((t) => t.id === id)?.name ?? id;
 const RISK_TAG: Record<string, string> = { delay: '⏳ Trễ +1 ngày', customs: '🛃 Hải quan +2 ngày', loss: '📉 Mất 10% lô' };
+
+/**
+ * Ngày cuối cùng (còn) ngưng vận chuyển, quét tới tối đa 7 ngày kể từ hôm nay
+ * (đã ngưng — mới gọi hàm này); tháng luôn 30 ngày (spec 1.6 / lịch 30 ngày/tháng).
+ */
+function lastSuspendedDay(month: number, day: number): { d: number; m: number } {
+  let m = month, d = day;
+  for (let i = 0; i < 7; i++) {
+    let nd = d + 1, nm = m;
+    if (nd > 30) { nd = 1; nm = nm >= 12 ? 1 : nm + 1; }
+    if (!logisticsSuspended(nm, nd)) break;
+    d = nd; m = nm;
+  }
+  return { d, m };
+}
 
 export default function RestockInbound() {
   const game = useGame((s) => s.game);
@@ -23,6 +38,8 @@ export default function RestockInbound() {
   const auditing = game.deliveries.filter((d) => d.state === 'auditing');
   const packers = game.grid.cells.filter((c) => c && c.type === 'packer').length;
   const stock = Object.values(game.inventory).reduce((a: number, b: number) => a + b, 0);
+  const suspendedToday = logisticsSuspended(game.clock.month, game.clock.day);
+  const resume = suspendedToday ? lastSuspendedDay(game.clock.month, game.clock.day) : null;
 
   return (
     <div className="space-y-3">
@@ -54,7 +71,14 @@ export default function RestockInbound() {
             <div className="text-xs text-slate-500">
               {SUPPLIER_NAME(d.supplierId)} · {carrierName(d.carrierId)} · hạng {d.grade} · {usdCents(d.cost)}
             </div>
-            {d.risk && <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">{RISK_TAG[d.risk]}</span>}
+            <div className="mt-1 flex flex-wrap gap-1">
+              {d.risk && <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">{RISK_TAG[d.risk]}</span>}
+              {resume && (
+                <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-800">
+                  ⛔ Ngưng vận chuyển tới {resume.d}/{resume.m}
+                </span>
+              )}
+            </div>
             <div className="mt-2 h-2 w-full rounded-full bg-slate-200">
               <div className="h-2 rounded-full bg-blue-600" style={{ width: `${pct}%` }} />
             </div>

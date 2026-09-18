@@ -1,5 +1,5 @@
 import { channels as CH, calendar as CAL, industries as IND, upgrades as UP } from '@shopflow/data';
-import { commissionOf, nightMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
+import { commissionOf, levelK, nightMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
 import { useGame } from '../store';
 import { hourRanges, usd } from '../format';
 
@@ -161,6 +161,9 @@ function ChannelCard({ def, game, dispatch }: {
   def: any; game: GameState; dispatch: (name: string, ...args: unknown[]) => void;
 }) {
   const st = game.channels.find((c) => c.id === def.id);
+  // Website (spec 1.5): K hiệu dụng tăng dần theo loyalty, hiển thị 2 chữ số thập phân, bỏ số 0 thừa.
+  const effK = levelK(def, st?.level ?? 1, st?.ordersDelivered ?? 0);
+  const fmtK = (n: number) => n.toFixed(2).replace(/\.?0+$/, '');
   const stageLocked = def.unlockStage > game.stage;
   const ratingLow = def.minRating != null && game.rating < def.minRating;
 
@@ -218,7 +221,9 @@ function ChannelCard({ def, game, dispatch }: {
         )}
         <p className="mt-0.5 text-xs text-slate-500">
           {commission > 0 ? `Hoa hồng ${(commission * 100).toFixed(0)}%` : 'Không hoa hồng'} ·{' '}
-          {def.dailyFee > 0 ? `${usd(def.dailyFee)}/ngày` : 'miễn phí'} · khách ×{def.trafficK}
+          {def.dailyFee > 0 ? `${usd(def.dailyFee)}/ngày` : 'miễn phí'} · khách ×{fmtK(effK)}
+          {def.loyalty &&
+            ` · +${def.loyalty.kPerOrders} mỗi ${def.loyalty.ordersStep} đơn (${(st?.ordersDelivered ?? 0) % def.loyalty.ordersStep}/${def.loyalty.ordersStep})`}
           {def.minRating != null && ` · cần Rating ≥ ${def.minRating}`}
         </p>
         {def.peakHourMult > BASE_PEAK_MULT && (

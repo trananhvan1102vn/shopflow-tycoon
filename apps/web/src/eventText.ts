@@ -1,0 +1,26 @@
+// apps/web/src/eventText.ts — text thuần cho sự kiện ngẫu nhiên (thẻ Quảng bá, toast, welcome-back).
+import { calendar as CAL } from '@shopflow/data';
+import type { EventDef } from '@shopflow/sim';
+
+const RE = CAL.randomEvents as { defs: { id: string; name: string }[] };
+
+/** Tên hiển thị của một sự kiện ngẫu nhiên theo id; rơi về chính id khi không tìm thấy. */
+export const RANDOM_EVENT_NAME = (id: string): string => RE.defs.find((d) => d.id === id)?.name ?? id;
+
+/**
+ * Dòng mô tả hiệu ứng của một def, đúng thứ tự các khoá trong `effects` (spec Phase 2),
+ * nối bằng " · ". Mỗi khoá hiệu ứng có đúng một đoạn văn bản cố định.
+ */
+export function eventEffectText(def: EventDef): string {
+  const e = def.effects;
+  const parts: string[] = [];
+  if (e.trafficMult != null) parts.push(`Khách ×${e.trafficMult}`);
+  if (e.retailMult != null) parts.push(`Giá lẻ ×${e.retailMult}`);
+  if (e.wholesaleMult != null) parts.push(`Giá sỉ ×${e.wholesaleMult}`);
+  if (e.deliveryDaysDelta != null) parts.push(`giao +${e.deliveryDaysDelta} ngày`);
+  if (e.overseasDaysDelta != null) parts.push(`Nguồn xa +${e.overseasDaysDelta} ngày`);
+  if (e.ratingDelta != null) parts.push(`Uy tín +${e.ratingDelta}`);
+  if (e.rivalPriceMult != null) parts.push(`Đối thủ bán ×${e.rivalPriceMult}`);
+  if (e.abovePriceTrafficMult != null) parts.push(`khách ×${e.abovePriceTrafficMult} nếu đắt hơn`);
+  return parts.join(' · ');
+}
