@@ -2,6 +2,7 @@ import { createGame, tick, makeRng, fastForward, type GameState, type Rng, type 
 import * as A from '@shopflow/sim';
 import { validateSave } from '../save';
 import { OFFLINE_NOTICE_MS } from '../pause'; // dưới ngưỡng: tua âm thầm, không hiện "Chào mừng trở lại"
+import { skipDayInfo } from '../skipDay';
 
 let state: GameState | null = null;
 let rng: Rng | null = null;
@@ -78,6 +79,10 @@ self.onmessage = (ev: MessageEvent) => {
   if (msg.type === 'setPaused') paused = msg.paused;
   if (msg.type === 'setSpeed') speed = msg.speed === 2 ? 2 : 1;
   if (msg.type === 'resume') resume(msg.elapsedMs ?? 0);
+  if (msg.type === 'skipDay' && state && rng) {
+    state = fastForward(state, skipDayInfo(state).ticks, rng).state;
+    post();
+  }
   if (msg.type === 'action') {
     if (!ACTIONS[msg.name]) { console.warn('[simWorker] action không tồn tại:', msg.name); return; }
     if (!state) return;
