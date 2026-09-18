@@ -45,6 +45,7 @@ const ACTIONS: Record<string, (...a: any[]) => GameState> = {
   buySeo: (...a) => A.buySeo(state!, ...(a as [string])),
   buyUpgrade: (...a) => A.buyUpgrade(state!, ...(a as [string])),
   chooseIndustry: (...a) => A.chooseIndustry(state!, ...(a as [string])),
+  setPrice: (...a) => A.setPrice(state!, ...(a as [string, number])),
   advanceStage: () => A.advanceStage(state!),
   expediteDelivery: (...a) => A.expediteDelivery(state!, ...(a as [string])),
   tutorialAdvance: () => A.tutorialAdvance(state!),

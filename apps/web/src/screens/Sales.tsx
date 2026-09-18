@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useGame } from '../store';
 import SalesChannels from './SalesChannels';
 import SalesOrders from './SalesOrders';
+import SalesPricing from './SalesPricing';
 
-type Sub = 'kenh' | 'don';
+type Sub = 'kenh' | 'don' | 'gia';
 
 const SUBS: { id: Sub; label: string }[] = [
   { id: 'kenh', label: 'Kênh bán' },
   { id: 'don', label: 'Đơn hàng' },
+  { id: 'gia', label: 'Giá bán' },
 ];
 
 export default function Sales() {
@@ -37,7 +39,7 @@ export default function Sales() {
         ))}
       </div>
 
-      {sub === 'kenh' ? <SalesChannels /> : <SalesOrders />}
+      {sub === 'kenh' ? <SalesChannels /> : sub === 'don' ? <SalesOrders /> : <SalesPricing />}
     </div>
   );
 }

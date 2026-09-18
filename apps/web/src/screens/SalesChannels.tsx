@@ -21,9 +21,10 @@ const CH_SHORT: Record<string, string> = { flea: 'Chợ Trời', mall: 'MegaMall
  *
  * Suy diễn (khớp `genOrders` trong sim):
  * - Sinh đơn chạy mỗi 10 giây thực = 40 phút game.
- * - Mỗi lượt, mỗi sản phẩm CÒN TỒN sinh kỳ vọng `r / 5` đơn, với `r = orderRate(...)`.
+ * - Mỗi lượt, mỗi sản phẩm CÒN TỒN sinh kỳ vọng `r / 5` đơn, với `r = orderRate(..., productId)`
+ *   — theo TỪNG sản phẩm vì giá tự đặt (màn 4) làm mỗi sản phẩm có cầu khác nhau.
  * - 1 giờ game = 60 phút game = 60 / 40 = 1.5 lượt sinh.
- * → đơn/giờ game ≈ (r / 5) × 1.5 × (số sản phẩm còn tồn của ngành).
+ * → đơn/giờ game ≈ Σ sản phẩm còn tồn của ((r / 5) × 1.5).
  *
  * Kênh được cô lập bằng cách clone state chỉ chứa đúng kênh đó, nên con số là
  * phần đóng góp riêng của kênh (kênh đang tạm đóng/khóa → 0, đúng như sim).
@@ -32,13 +33,18 @@ const CH_SHORT: Record<string, string> = { flea: 'Chợ Trời', mall: 'MegaMall
 export function estOrdersPerGameHour(game: GameState, ch: ChannelState, industryId: string): number | null {
   const ind = IND.industries.find((i: any) => i.id === industryId);
   if (!ind) return null;
-  const stocked = ind.products.filter(
-    (p: any) => (p.unlockStage ?? 1) <= game.stage && (game.inventory[p.id] ?? 0) > 0,
-  ).length;
-  if (stocked === 0) return null;
+  const stockedIds = ind.products
+    .filter((p: any) => (p.unlockStage ?? 1) <= game.stage && (game.inventory[p.id] ?? 0) > 0)
+    .map((p: any) => p.id as string);
+  if (stockedIds.length === 0) return null;
   const env = trafficEnvMult(game.clock, industryId) * nightMult(game.clock.minute);
-  const r = orderRate({ ...game, channels: [ch] }, industryId, game.seo[industryId] ?? UP.seoStart, env);
-  return (r / 5) * 1.5 * stocked;
+  const seo = game.seo[industryId] ?? UP.seoStart;
+  let sum = 0;
+  for (const pid of stockedIds) {
+    const r = orderRate({ ...game, channels: [ch] }, industryId, seo, env, pid);
+    sum += (r / 5) * 1.5;
+  }
+  return sum;
 }
 
 /** Tổng đơn/giờ của một kênh trên tất cả ngành đang sở hữu. */
