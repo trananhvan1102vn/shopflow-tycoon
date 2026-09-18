@@ -9,6 +9,8 @@ const PRODUCT_NAME: Record<string, string> = Object.fromEntries(
 );
 
 const carrierName = (id: string) => SUP.carriers.find((c: any) => c.id === id)?.name ?? id;
+const SUPPLIER_NAME = (id: string) => (SUP.tiers as any[]).find((t) => t.id === id)?.name ?? id;
+const RISK_TAG: Record<string, string> = { delay: '⏳ Trễ +1 ngày', customs: '🛃 Hải quan +2 ngày', loss: '📉 Mất 10% lô' };
 
 export default function RestockInbound() {
   const game = useGame((s) => s.game);
@@ -50,8 +52,9 @@ export default function RestockInbound() {
             </div>
             <div className="mt-1 font-bold">#{d.id} · {summary(d)}</div>
             <div className="text-xs text-slate-500">
-              {carrierName(d.carrierId)} · hạng {d.grade} · {usdCents(d.cost)}
+              {SUPPLIER_NAME(d.supplierId)} · {carrierName(d.carrierId)} · hạng {d.grade} · {usdCents(d.cost)}
             </div>
+            {d.risk && <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">{RISK_TAG[d.risk]}</span>}
             <div className="mt-2 h-2 w-full rounded-full bg-slate-200">
               <div className="h-2 rounded-full bg-blue-600" style={{ width: `${pct}%` }} />
             </div>
@@ -74,6 +77,9 @@ export default function RestockInbound() {
               <span className="font-bold text-orange-700">Đã về kho</span>
             </div>
             <div className="mt-1 font-bold">#{d.id} · {summary(d)}</div>
+            <div className="text-xs text-slate-500">
+              {SUPPLIER_NAME(d.supplierId)} · {carrierName(d.carrierId)} · hạng {d.grade} · {usdCents(d.cost)}
+            </div>
             <div className="mt-2 flex items-center gap-2">
               <div className="h-2 flex-1 rounded-full bg-slate-200">
                 <div className="h-2 rounded-full bg-orange-500" style={{ width: `${pct}%` }} />

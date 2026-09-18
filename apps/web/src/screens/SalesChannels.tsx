@@ -1,7 +1,12 @@
-import { channels as CH, industries as IND, upgrades as UP } from '@shopflow/data';
-import { commissionOf, hourMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
+import { channels as CH, calendar as CAL, industries as IND, upgrades as UP } from '@shopflow/data';
+import { commissionOf, nightMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
 import { useGame } from '../store';
-import { usd } from '../format';
+import { hourRanges, usd } from '../format';
+
+/** Giờ cao điểm lấy thẳng từ lịch (calendar.hourly.peakHours), gộp thành khoảng để hiển thị. */
+const PEAK_HOURS_TEXT = hourRanges(CAL.hourly.peakHours as number[]);
+/** Mức dồn giờ cao điểm "bình thường" = của kênh mở đầu (Chợ Trời); cao hơn mới đáng nhắc. */
+const BASE_PEAK_MULT = ((CH.channels as any[]).find((d) => d.id === 'flea')?.peakHourMult ?? 1) as number;
 
 const CH_ICON: Record<string, string> = { flea: '🛍️', mall: '🏬', social: '📣', website: '🌐' };
 const IND_ICON: Record<string, string> = {
@@ -31,7 +36,7 @@ export function estOrdersPerGameHour(game: GameState, ch: ChannelState, industry
     (p: any) => (p.unlockStage ?? 1) <= game.stage && (game.inventory[p.id] ?? 0) > 0,
   ).length;
   if (stocked === 0) return null;
-  const env = trafficEnvMult(game.clock, industryId) * hourMult(game.clock.minute);
+  const env = trafficEnvMult(game.clock, industryId) * nightMult(game.clock.minute);
   const r = orderRate({ ...game, channels: [ch] }, industryId, game.seo[industryId] ?? UP.seoStart, env);
   return (r / 5) * 1.5 * stocked;
 }
@@ -210,6 +215,9 @@ function ChannelCard({ def, game, dispatch }: {
           {def.dailyFee > 0 ? `${usd(def.dailyFee)}/ngày` : 'miễn phí'} · khách ×{def.trafficK}
           {def.minRating != null && ` · cần Rating ≥ ${def.minRating}`}
         </p>
+        {def.peakHourMult > BASE_PEAK_MULT && (
+          <p className="mt-0.5 text-xs text-violet-700">Đơn dồn giờ cao điểm ×{def.peakHourMult} ({PEAK_HOURS_TEXT})</p>
+        )}
         <p className="mt-0.5 text-xs font-bold text-emerald-700">
           {rate === null ? 'Chưa có tồn kho' : `≈ ${rate.toFixed(1)} đơn/giờ`}
           {best && ` · hợp ngành: ${IND_ICON[best.id]}×${best.a}`}

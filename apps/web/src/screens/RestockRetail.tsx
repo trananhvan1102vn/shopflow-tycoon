@@ -1,86 +1,51 @@
 import { useEffect, useState } from 'react';
 import { industries as IND, suppliers as SUP } from '@shopflow/data';
-import { retailUnitPrice, pendingAuditCapacity } from '@shopflow/sim';
+import { quoteRetail, pendingAuditCapacity } from '@shopflow/sim';
 import { useGame } from '../store';
 import { usdCents } from '../format';
+import SupplierPicker from '../components/SupplierPicker';
 
-const STEP = SUP.retail.moqLocal as number; // 5 — bậc nhảy đúng bằng MOQ nên mọi đơn đều hợp lệ
 const MAX = SUP.retail.maxPerOrder as number;
-const GRADES = ['A', 'B', 'C'] as const;
 
 export default function RestockRetail() {
   const game = useGame((s) => s.game);
   const dispatch = useGame((s) => s.dispatch);
+  const supplierId = useGame((s) => s.supplierId);
+  const grade = useGame((s) => s.grade);
   const [industryId, setIndustryId] = useState<string | null>(null);
   const [carrierId, setCarrierId] = useState('standard');
   const [qty, setQty] = useState<Record<string, number>>({});
-  // Đổi ngành → xoá giỏ: nếu giữ lại, thanh tổng và nút Đặt hàng vẫn tính các sản phẩm không còn hiển thị.
-  useEffect(() => setQty({}), [industryId]);
+  // Đổi ngành hoặc nguồn hàng → xoá giỏ: MOQ có thể đổi theo nguồn, và thanh tổng/nút Đặt hàng
+  // vẫn tính các sản phẩm không còn hiển thị nếu giữ lại.
+  useEffect(() => setQty({}), [industryId, supplierId]);
   if (!game) return null;
 
   const owned = IND.industries.filter((i: any) => game.industries.includes(i.id));
   const ind = owned.find((i: any) => i.id === industryId) ?? owned[0];
   if (!ind) return null;
 
-  const carrier = SUP.carriers.find((c: any) => c.id === carrierId)!;
+  const quote = (pid: string, q: number) => quoteRetail(game, pid, Math.max(1, q), { carrierId, supplierId, grade });
+  const moq = quote(ind.products[0].id, 1).moq;
   const lines = Object.entries(qty).filter(([, q]) => q > 0);
-  const goods = lines.reduce((a, [pid, q]) => a + retailUnitPrice(game, pid) * q, 0);
+  const goods = lines.reduce((a, [pid, q]) => a + quote(pid, q).goods, 0);
   // buyRetail tính phí ship cho TỪNG đơn hàng → mỗi sản phẩm có qty > 0 là một lần phí.
-  const ship = carrier.fee * lines.length;
-  const sameDay = carrier.daysDelta <= 0;
+  const ship = lines.length ? quote(lines[0][0], 1).ship * lines.length : 0;
+  const days = quote(ind.products[0].id, 1).days;
+  const sameDay = days === 0;
   const units = lines.reduce((a, [, q]) => a + q, 0);
   const overCap = sameDay && units > pendingAuditCapacity(game);
 
   const bump = (pid: string, d: number) =>
-    setQty((q) => ({ ...q, [pid]: Math.max(0, Math.min(MAX, (q[pid] ?? 0) + d * STEP)) }));
+    setQty((q) => ({ ...q, [pid]: Math.max(0, Math.min(MAX, (q[pid] ?? 0) + d * moq)) }));
 
   const order = () => {
-    for (const [pid, q] of lines) dispatch('buyRetail', pid, q, carrierId);
+    for (const [pid, q] of lines) dispatch('buyRetail', pid, q, { carrierId, supplierId, grade });
     setQty({});
   };
 
   return (
     <div className="space-y-3 pb-28">
-      <Section title="Nguồn hàng" />
-      <div className="grid grid-cols-3 gap-2">
-        {SUP.tiers.map((t: any) => {
-          const locked = t.unlockStage > game.stage;
-          return (
-            <div
-              key={t.id}
-              className={`rounded-xl border-2 bg-white p-2 text-xs shadow ${
-                locked ? 'border-slate-200 text-slate-400' : 'border-emerald-600'
-              }`}
-            >
-              <div className="font-bold">{locked ? '🔒 ' : ''}{t.name}</div>
-              <div className="mt-0.5">
-                {t.costMult < 1 ? `−${Math.round((1 - t.costMult) * 100)}%` : 'giá gốc'} ·{' '}
-                {t.extraDays === 0 ? 'giao ngay' : `+${t.extraDays} ngày`}
-              </div>
-              {locked && <div className="mt-0.5 font-bold">Màn {t.unlockStage}</div>}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Section title="Hạng · % trả" />
-        <div className="ml-auto flex gap-1">
-          {GRADES.map((g) => {
-            const active = g === 'B'; // M1: chỉ hạng B ở màn 1, A/C mở ở màn 2
-            return (
-              <span
-                key={g}
-                className={`rounded-full px-3 py-1 text-xs ${
-                  active ? 'bg-slate-900 font-bold text-white' : 'bg-slate-100 text-slate-400'
-                }`}
-              >
-                {g} · {Math.round(SUP.grades[g].returnRate * 100)}%{active ? '' : ' · Màn 2'}
-              </span>
-            );
-          })}
-        </div>
-      </div>
+      <SupplierPicker />
 
       {owned.length >= 2 && (
         <select
@@ -103,7 +68,7 @@ export default function RestockRetail() {
                 <div className="truncate font-bold">{locked ? '🔒 ' : ''}{p.name}</div>
                 <div className="text-xs text-slate-500">
                   Tồn <b className={stock < 10 ? 'text-red-600' : 'text-slate-700'}>{stock}</b> · Bán {usdCents(p.retail)} ·
-                  {' '}Nhập lẻ <b className="text-slate-800">{usdCents(retailUnitPrice(game, p.id))}</b>
+                  {' '}Nhập <b className="text-slate-800">{usdCents(quote(p.id, 1).unit)}</b>
                   {locked && ` · Màn ${p.unlockStage}`}
                 </div>
               </div>
@@ -122,7 +87,7 @@ export default function RestockRetail() {
       <div className="fixed inset-x-0 bottom-14 z-30 border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-md space-y-2 p-3">
           <div className="flex items-baseline justify-between text-xs text-slate-500">
-            <span>{units} món (hạng B) {usdCents(goods)} + ship {usdCents(ship)}</span>
+            <span>{units} món (hạng {grade}) {usdCents(goods)} + ship {usdCents(ship)}</span>
             <span className="text-base font-bold text-slate-900">{usdCents(goods + ship)}</span>
           </div>
           {overCap && <p className="text-xs font-bold text-red-600">Khu chờ kiểm sắp đầy — cần thêm ô trống trong kho.</p>}
@@ -138,15 +103,11 @@ export default function RestockRetail() {
             </select>
             <button disabled={lines.length === 0} onClick={order}
               className="flex-1 rounded-xl bg-emerald-700 p-2 font-bold text-white disabled:bg-slate-300">
-              Đặt hàng{sameDay ? ' · giao hôm nay' : ` · về sau ${carrier.daysDelta} ngày`}
+              Đặt hàng · {sameDay ? 'giao hôm nay' : `về sau ${days} ngày`}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function Section({ title }: { title: string }) {
-  return <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">{title}</h2>;
 }

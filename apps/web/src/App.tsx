@@ -2,29 +2,31 @@ import { useEffect, useState } from 'react';
 import { useGame } from './store';
 import IndustrySelect from './screens/IndustrySelect';
 import DayReportModal from './screens/DayReportModal';
+import WelcomeBack from './screens/WelcomeBack';
 import StageComplete from './screens/StageComplete';
 import Warehouse from './screens/Warehouse';
 import Restock from './screens/Restock';
 import Sales from './screens/Sales';
 import Promo from './screens/Promo';
+import More from './screens/More';
 import Hud from './components/Hud';
 import TabBar, { type Tab } from './components/TabBar';
 import Toast from './components/Toast';
-
-/** Placeholder cho các màn sẽ làm ở task sau. */
-const PLACEHOLDERS: Record<Exclude<Tab, 'kho' | 'nhap' | 'ban' | 'quangba'>, string> = {
-  them: '🔒 Mở ở màn 3',
-};
+import EventToasts from './components/EventToasts';
+import TutorialCard from './components/TutorialCard';
 
 export default function App() {
   const game = useGame((s) => s.game);
   const booted = useGame((s) => s.booted);
+  const markVisited = useGame((s) => s.markVisited);
+  const offlineSummary = useGame((s) => s.offlineSummary);
   const [tab, setTab] = useState<Tab>('kho');
   // `stageComplete` tắt ngay khi `advanceStage` chạy, nhưng overlay còn bước chọn
   // ngành phía sau → chốt cờ riêng ở đây, StageComplete tự gọi onClose khi xong.
   const [stageOverlay, setStageOverlay] = useState(false);
   const stageComplete = game?.stageComplete ?? false;
   useEffect(() => { if (stageComplete) setStageOverlay(true); }, [stageComplete]);
+  useEffect(() => { markVisited(tab); }, [tab, markVisited]);
 
   if (!booted) return <div className="p-8 text-center">Đang tải…</div>;
   if (!game) return <IndustrySelect />;
@@ -32,7 +34,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Hud />
-      <main className="mx-auto max-w-md p-4 pb-24">
+      <main className={`mx-auto max-w-md p-4 ${game.tutorial.done ? 'pb-24' : 'pb-36'}`}>
         {tab === 'kho' ? (
           <Warehouse />
         ) : tab === 'nhap' ? (
@@ -42,13 +44,16 @@ export default function App() {
         ) : tab === 'quangba' ? (
           <Promo />
         ) : (
-          <div className="rounded-xl bg-white p-8 text-center text-slate-500 shadow">{PLACEHOLDERS[tab]}</div>
+          <More />
         )}
       </main>
       <TabBar tab={tab} setTab={setTab} />
+      <TutorialCard tab={tab} setTab={setTab} />
       <DayReportModal />
-      {stageOverlay && <StageComplete onClose={() => setStageOverlay(false)} />}
+      <WelcomeBack />
+      {stageOverlay && !offlineSummary && <StageComplete onClose={() => setStageOverlay(false)} />}
       <Toast />
+      <EventToasts />
     </div>
   );
 }

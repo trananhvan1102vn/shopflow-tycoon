@@ -1,9 +1,12 @@
 import { industries as IND, suppliers as SUP, stages as ST, calendar as CAL, channels as CH, upgrades as UP } from '@shopflow/data';
-import type { Cents, Delivery, GameState } from './types.js';
+import type { Cents, Delivery, GameState, Grade } from './types.js';
 import { wholesaleEnvMult } from './env.js';
 import { shelfCapacity } from './logistics.js';
+import { modifiers } from './modifiers.js';
+import { supplierDef, supplierUnlocked, gradeAllowed, gradeCostMult, relationshipDiscount, relationshipPerks, addRelationshipXp } from './suppliers.js';
+import { checkQuests } from './quests.js';
 
-const ok = (s: GameState): GameState => ({ ...s, lastReject: null });
+const ok = (s: GameState): GameState => checkQuests({ ...s, lastReject: null });
 const reject = (s: GameState, msg: string): GameState => ({ ...s, lastReject: msg });
 
 function findProduct(productId: string) {
@@ -17,73 +20,121 @@ export function pendingAuditCapacity(s: GameState): number {
   return empty * ST.warehouse.uncheckedPerEmptyCell - s.unchecked;
 }
 
-export function retailUnitPrice(s: GameState, productId: string): Cents {
-  const f = findProduct(productId)!;
-  const tier = SUP.tiers.find((t: any) => t.id === 'local')!;
-  return Math.round(f.p.wholesale * SUP.retail.priceMult * tier.costMult * SUP.grades.B.costMult);
+export interface PurchaseOpts { carrierId: string; supplierId?: string; grade?: Grade; seasonalId?: string }
+
+const norm = (o: PurchaseOpts) => ({ carrierId: o.carrierId, supplierId: o.supplierId ?? 'local', grade: (o.grade ?? 'B') as Grade, seasonalId: o.seasonalId });
+
+/** Ngày giao (spec B3): gói + nguồn + hãng + daysDelta quan hệ (cộng dồn) × Định Tuyến. */
+function deliveryDays(s: GameState, baseDays: number, supplierId: string, carrierId: string): number {
+  const sup = supplierDef(supplierId); const carrier = (SUP.carriers as any[]).find((c) => c.id === carrierId);
+  const raw = baseDays + (sup?.extraDays ?? 0) + (carrier?.daysDelta ?? 0) + relationshipPerks(s, supplierId).daysDelta;
+  return Math.max(0, Math.round(raw * modifiers(s).deliveryDays));
 }
 
-function makeDelivery(s: GameState, items: Record<string, number>, cost: Cents, carrierId: string, baseDays: number): { s: GameState; d: Delivery } {
-  const carrier = SUP.carriers.find((c: any) => c.id === carrierId)!;
-  const daysLeft = Math.max(0, baseDays + carrier.daysDelta);
+function shipFee(s: GameState, carrierId: string, industryId: string | null, bundle: boolean): Cents {
+  const carrier = (SUP.carriers as any[]).find((c) => c.id === carrierId);
+  const ind = industryId ? (IND.industries as any[]).find((i) => i.id === industryId) : null;
+  const mult = bundle ? (ind?.traits?.bundleShipMult ?? 1) : 1;
+  return Math.round((carrier?.fee ?? 0) * modifiers(s).shipping * mult);
+}
+
+export function quoteRetail(s: GameState, productId: string, qty: number, o: PurchaseOpts) {
+  const { carrierId, supplierId, grade } = norm(o);
+  const f = findProduct(productId)!;
+  const sup = supplierDef(supplierId);
+  const unit = Math.round(f.p.wholesale * SUP.retail.priceMult * (sup?.costMult ?? 1)
+    * gradeCostMult(s, supplierId, grade) * (1 - relationshipDiscount(s, supplierId)));
+  const moq = supplierId === 'local' ? SUP.retail.moqLocal : SUP.retail.moqImport;
+  return { unit, goods: unit * qty, ship: shipFee(s, carrierId, f.ind.id, false), days: deliveryDays(s, 0, supplierId, carrierId), moq };
+}
+
+export const retailUnitPrice = (s: GameState, productId: string): Cents =>
+  quoteRetail(s, productId, 1, { carrierId: 'standard' }).unit;
+
+export function quoteBundle(s: GameState, industryId: string, bundleId: string, o: PurchaseOpts) {
+  const { carrierId, supplierId, grade, seasonalId } = norm(o);
+  const ind = (IND.industries as any[]).find((i) => i.id === industryId);
+  const bundle = ind?.bundles.find((b: any) => b.id === bundleId);
+  if (!ind || !bundle) return { goods: 0, ship: 0, days: 0, discountPct: 0 };
+  const sup = supplierDef(supplierId);
+  let goods = bundle.cost * (sup?.costMult ?? 1) * gradeCostMult(s, supplierId, grade) * (1 - relationshipDiscount(s, supplierId))
+    * wholesaleEnvMult(s.clock, industryId) * modifiers(s).wholesale;
+  let discountPct = 0;
+  if (seasonalId) {
+    const sb = (CAL.seasonalBundles as any[]).find((x) => x.id === seasonalId);
+    if (sb) { goods *= 1 - sb.discount; discountPct = sb.discount; }
+  }
+  return { goods: Math.round(goods), ship: shipFee(s, carrierId, industryId, true), days: deliveryDays(s, bundle.days, supplierId, carrierId), discountPct };
+}
+
+function makeDelivery(s: GameState, items: Record<string, number>, cost: Cents, o: ReturnType<typeof norm>, daysLeft: number, bundleId?: string): GameState {
   const itemsTotal = Object.values(items).reduce((a, b) => a + b, 0);
   const d: Delivery = {
-    id: `d${s.deliverySeq + 1}`, items, grade: 'B', supplierId: 'local', carrierId,
+    id: `d${s.deliverySeq + 1}`, bundleId, items, grade: o.grade, supplierId: o.supplierId, carrierId: o.carrierId,
     cost, state: daysLeft === 0 ? 'auditing' : 'shipping', daysLeft, itemsTotal, itemsChecked: 0,
+    riskResolved: daysLeft === 0,
   };
-  const next = {
+  const next: GameState = {
     ...s, deliverySeq: s.deliverySeq + 1,
     money: s.money - cost, dayPurchases: s.dayPurchases + cost,
     deliveries: [...s.deliveries, d],
     unchecked: d.state === 'auditing' ? s.unchecked + itemsTotal : s.unchecked,
+    retailLotsBought: s.retailLotsBought + (bundleId ? 0 : 1),
+    bundleLotsBought: s.bundleLotsBought + (bundleId ? 1 : 0),
   };
-  return { s: next, d };
+  return addRelationshipXp(next, o.supplierId, cost);
 }
 
-export function buyRetail(s: GameState, productId: string, qty: number, carrierId: string): GameState {
+/** Kiểm tra chung nguồn/hạng/hãng — trả thông báo lỗi hoặc null. */
+function purchaseGate(s: GameState, o: ReturnType<typeof norm>): string | null {
+  if (!supplierDef(o.supplierId)) return 'Không có nguồn này';
+  if (!supplierUnlocked(s, o.supplierId)) return `Nguồn mở ở màn ${supplierDef(o.supplierId).unlockStage}`;
+  if (!gradeAllowed(s, o.supplierId, o.grade)) return `Nguồn này chưa có hạng ${o.grade}`;
+  if (!(SUP.carriers as any[]).some((c) => c.id === o.carrierId)) return 'Chưa chọn hãng vận chuyển';
+  return null;
+}
+
+export function buyRetail(s: GameState, productId: string, qty: number, opts: PurchaseOpts): GameState {
+  const o = norm(opts);
   const f = findProduct(productId);
   if (!f || !s.industries.includes(f.ind.id)) return reject(s, 'Sản phẩm không thuộc ngành của bạn');
   if (((f.p as any).unlockStage ?? 1) > s.stage) return reject(s, `Mở ở màn ${(f.p as any).unlockStage}`);
-  if (qty < SUP.retail.moqLocal) return reject(s, `Tối thiểu ${SUP.retail.moqLocal} sản phẩm`);
+  const gate = purchaseGate(s, o); if (gate) return reject(s, gate);
+  const q = quoteRetail(s, productId, qty, o);
+  if (qty < q.moq) return reject(s, `Tối thiểu ${q.moq} sản phẩm`);
   if (qty > SUP.retail.maxPerOrder) return reject(s, `Tối đa ${SUP.retail.maxPerOrder} sản phẩm/lần`);
-  const carrier = SUP.carriers.find((c: any) => c.id === carrierId);
-  if (!carrier) return reject(s, 'Chưa chọn hãng vận chuyển');
-  const cost = retailUnitPrice(s, productId) * qty + carrier.fee;
+  const cost = q.goods + q.ship;
   if (s.money < cost) return reject(s, 'Không đủ tiền');
-  if (qty > pendingAuditCapacity(s) && Math.max(0, 0 + carrier.daysDelta) === 0)
-    return reject(s, 'Khu chờ kiểm đã đầy — cần ô trống');
-  return ok(makeDelivery(s, { [productId]: qty }, cost, carrierId, 0).s);
+  if (q.days === 0 && qty > pendingAuditCapacity(s)) return reject(s, 'Khu chờ kiểm đã đầy — cần ô trống');
+  return ok(makeDelivery(s, { [productId]: qty }, cost, o, q.days));
 }
 
-export function buyBundle(s: GameState, industryId: string, bundleId: string, carrierId: string, seasonalId?: string): GameState {
-  const ind = IND.industries.find((i: any) => i.id === industryId);
+export function buyBundle(s: GameState, industryId: string, bundleId: string, opts: PurchaseOpts): GameState {
+  const o = norm(opts);
+  const ind = (IND.industries as any[]).find((i) => i.id === industryId);
   if (!ind || !s.industries.includes(industryId)) return reject(s, 'Ngành chưa mở');
   const bundle = ind.bundles.find((b: any) => b.id === bundleId);
   if (!bundle) return reject(s, 'Không có gói này');
   if (bundle.unlockStage > s.stage) return reject(s, `Mở ở màn ${bundle.unlockStage}`);
-  const carrier = SUP.carriers.find((c: any) => c.id === carrierId);
-  if (!carrier) return reject(s, 'Chưa chọn hãng vận chuyển');
-  let cost = bundle.cost * wholesaleEnvMult(s.clock, industryId);
+  const gate = purchaseGate(s, o); if (gate) return reject(s, gate);
   let seasonalBought = s.seasonalBought;
-  if (seasonalId) {
+  if (o.seasonalId) {
     if (s.stage < 2) return reject(s, 'Gói mùa mở ở màn 2');
-    const sb = CAL.seasonalBundles.find((x: any) => x.id === seasonalId);
+    const sb = (CAL.seasonalBundles as any[]).find((x) => x.id === o.seasonalId);
     if (!sb) return reject(s, 'Không có gói mùa này');
     const [[fm, fd], [tm, td]] = sb.window;
     const a = s.clock.month * 100 + s.clock.day;
     if (a < fm * 100 + fd || a > tm * 100 + td) return reject(s, 'Ngoài cửa sổ gói mùa');
     if (sb.industries !== 'all' && !(sb.industries as string[]).includes(industryId)) return reject(s, 'Gói mùa không áp dụng ngành này');
-    if ((s.seasonalBought[seasonalId] ?? 0) >= sb.limit) return reject(s, 'Hết lượt mua gói mùa');
-    cost *= 1 - sb.discount;
-    seasonalBought = { ...s.seasonalBought, [seasonalId]: (s.seasonalBought[seasonalId] ?? 0) + 1 };
+    if ((s.seasonalBought[o.seasonalId] ?? 0) >= sb.limit) return reject(s, 'Hết lượt mua gói mùa');
+    seasonalBought = { ...s.seasonalBought, [o.seasonalId]: (s.seasonalBought[o.seasonalId] ?? 0) + 1 };
   }
-  cost = Math.round(cost) + carrier.fee;
+  const q = quoteBundle(s, industryId, bundleId, o);
+  const cost = q.goods + q.ship;
   if (s.money < cost) return reject(s, 'Không đủ tiền');
   const itemsTotal = Object.values(bundle.items as Record<string, number>).reduce((a, b) => a + b, 0);
-  if (Math.max(0, bundle.days + carrier.daysDelta) === 0 && itemsTotal > pendingAuditCapacity(s))
-    return reject(s, 'Khu chờ kiểm đã đầy — cần ô trống');
-  const r = makeDelivery({ ...s, seasonalBought }, bundle.items as Record<string, number>, cost, carrierId, bundle.days);
-  return ok(r.s);
+  if (q.days === 0 && itemsTotal > pendingAuditCapacity(s)) return reject(s, 'Khu chờ kiểm đã đầy — cần ô trống');
+  return ok(makeDelivery({ ...s, seasonalBought }, bundle.items as Record<string, number>, cost, o, q.days, bundleId));
 }
 
 export function expediteDelivery(s: GameState, deliveryId: string): GameState {
@@ -204,6 +255,15 @@ export function buySeo(s: GameState, industryId: string): GameState {
   return ok({ ...s, money: s.money - next.cost, seo: { ...s.seo, [industryId]: next.score } });
 }
 
+export function buyUpgrade(s: GameState, id: string): GameState {
+  const def = (UP.upgrades as any[]).find((u) => u.id === id);
+  if (!def) return reject(s, 'Không có nâng cấp này');
+  if (s.stage < 3) return reject(s, 'Nâng cấp mở ở màn 3');
+  if (s.upgrades.includes(id)) return reject(s, 'Đã mua nâng cấp này');
+  if (s.money < def.cost) return reject(s, 'Không đủ tiền');
+  return ok({ ...s, money: s.money - def.cost, dayPurchases: s.dayPurchases + def.cost, upgrades: [...s.upgrades, id] });
+}
+
 export function chooseIndustry(s: GameState, industryId: string): GameState {
   const ind = IND.industries.find((i: any) => i.id === industryId);
   if (!ind || ind.unlock !== 'start-option') return reject(s, 'Ngành này chưa thể mở');
@@ -215,5 +275,7 @@ export function chooseIndustry(s: GameState, industryId: string): GameState {
 export function advanceStage(s: GameState): GameState {
   if (!s.stageComplete) return reject(s, 'Chưa hoàn thành mục tiêu màn');
   const reward = ST.stages[s.stage - 1].reward ?? 0;
-  return ok({ ...s, money: s.money + reward, stage: s.stage + 1, stageComplete: false });
+  // Chuỗi ngày lãi đếm lại từ đầu ở màn mới: nhiệm vụ `profit_5_days` (màn 3) phải được
+  // kiếm trong màn 3, không được trả ngay khi vừa bước vào nhờ chuỗi tích ở màn 2.
+  return ok({ ...s, money: s.money + reward, stage: s.stage + 1, stageComplete: false, profitStreakDays: 0 });
 }

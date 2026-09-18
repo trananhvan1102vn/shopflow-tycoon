@@ -15,3 +15,13 @@ export const gameTime = (minute: number): string => {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 };
 export const dateStr = (c: { day: number; month: number }): string => `Ngày ${c.day} · Tháng ${c.month}`;
+/** Danh sách giờ → chuỗi khoảng gọn: [11,12,13,19,20,21,22] → "11–13h, 19–22h". */
+export const hourRanges = (hours: number[]): string => {
+  const runs: number[][] = [];
+  for (const h of [...hours].sort((a, b) => a - b)) {
+    const last = runs[runs.length - 1];
+    if (last && h === last[last.length - 1] + 1) last.push(h);
+    else runs.push([h]);
+  }
+  return runs.map((r) => (r.length === 1 ? `${r[0]}h` : `${r[0]}–${r[r.length - 1]}h`)).join(', ');
+};

@@ -2,24 +2,25 @@ import { describe, it, expect } from 'vitest';
 import { createGame, tick, makeRng, orderRate } from '../src/index.js';
 import { openChannel, upgradeChannel, setChannelOpen } from '../src/actions.js';
 import { channelWeights } from '../src/formulas.js';
-import { channels as CH } from '@shopflow/data';
+import { channels as CH, stages as ST } from '@shopflow/data';
 
 const rng = makeRng(1);
 const atStage2 = () => { const s = createGame(42, 'electronics'); s.stage = 2; return s; };
+const OPEN_MALL = ST.quests['2'].find((q: any) => q.id === 'open_mall').bonus;
 
 describe('channels', () => {
   it('mall locked at stage 1, opens at stage 2 for $200', () => {
     expect(openChannel(createGame(42, 'electronics'), 'mall').lastReject).toBeTruthy();
     const s = openChannel(atStage2(), 'mall');
     expect(s.lastReject).toBeNull();
-    expect(s.money).toBe(100000 - 20000);
+    expect(s.money).toBe(100000 - 20000 + OPEN_MALL);
     expect(s.channels.map(c => c.id)).toContain('mall');
   });
   it('upgrade: level 2 = openCost×2', () => {
     let s = openChannel(atStage2(), 'mall');
     s = upgradeChannel(s, 'mall');
     expect(s.channels.find(c => c.id === 'mall')!.level).toBe(2);
-    expect(s.money).toBe(100000 - 20000 - 40000);
+    expect(s.money).toBe(100000 - 20000 - 40000 + OPEN_MALL);
   });
   it('flea upgrade dùng upgradeCostBase (không miễn phí dù openCost 0)', () => {
     let s = createGame(42, 'electronics');
@@ -58,5 +59,16 @@ describe('channels', () => {
     s.rating = 3.8;
     s = tick(s, 24 * 60, rng); // thêm 1 ngày
     expect(s.channels.find(c => c.id === 'mall')!.ratingLocked).toBe(false);
+  });
+});
+
+describe('SocialShop peak ×3 (per-channel hour multiplier)', () => {
+  it('at 12:00 social weight is 3× its base K×A, flea is 2×', () => {
+    const s = createGame(42, 'fashion'); s.stage = 3; s.money = 10_000_000;
+    const s2 = openChannel(s, 'social');
+    const w = (minute: number) => Object.fromEntries(channelWeights({ ...s2, clock: { ...s2.clock, minute } }, 'fashion'));
+    const day = w(9 * 60), noon = w(12 * 60);
+    expect(noon.social / day.social).toBeCloseTo(3);
+    expect(noon.flea / day.flea).toBeCloseTo(2);
   });
 });

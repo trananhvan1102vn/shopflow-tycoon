@@ -52,6 +52,7 @@ recessionClean: boolean;          // no unpaid-fee suspension since the current 
 tutorial: { step: number; done: boolean; rewarded: boolean }; // step 0..8
 questsDone: string[];             // quest ids already rewarded
 dayRefunds: Cents; dayQuestBonus: Cents; // day accumulators, reset at settle
+survivedRecession: boolean; retailLotsBought: number; bundleLotsBought: number; // added in plan Task 1 for quest/tutorial predicates
 ```
 
 `Delivery` gains `riskResolved: boolean` and `risk?: 'delay' | 'customs' | 'loss'`. `DayReport` gains `refunds: Cents` (informational) and `questBonus: Cents` (folded into `net`).
@@ -175,11 +176,13 @@ export function fastForward(s: GameState, ticks: number, rng: Rng): { state: Gam
 
 ### 1.9 Balance harness (`test/harness.test.ts`)
 
-Stage-1 test unchanged. Bot extended with stage-2/3 behaviour (open MegaMall, buy a seasonal bundle when available, place a robot, buy SEO, pick second/third industry, use regional then overseas supplier with grade B, buy `wholesale` and `routing` upgrades when affordable, keep all industries stocked). New assertions:
+Stage-1 test unchanged. Bot extended with stage-2/3 behaviour (`botAct2`, active from stage ≥ 2): open MegaMall/SocialShop, expand the warehouse grid, place shelves/packers/robots, buy SEO, pick the second/third industry, use regional then overseas supplier with grade B, buy `wholesale` and `routing` upgrades when affordable, and restock every active industry from an emergency local-supplier top-up (needed because `genOrders` only spawns demand for a product while its on-hand stock is `> 0` — a bot that lets stock hit zero between multi-day bundle deliveries stalls order generation entirely, not just fulfilment). New assertions, run via a shared `runStage` helper that tracks whether any channel was ever `suspended`:
 
-- Stage 2 completes 20–40 real minutes (1,200–2,400 ticks) after stage 1.
-- Stage 3 completes 30–60 real minutes (1,800–3,600 ticks) after stage 2.
+- Stage 2 completes within a real-time window after stage 1.
+- Stage 3 completes within a real-time window after stage 2.
 - No channel is ever suspended for unpaid fees in either stage.
+
+**2026-09-17 update — windows revised down from the original proposal.** The original proposal (stage 2: 20–40 min / 1,200–2,400 ticks; stage 3: 30–60 min / 1,800–3,600 ticks) assumed a much slower ramp-up than the sim actually produces. Measured with `botAct2` (seed `20260917`, a bot that reinvests spare cash into unlocks as soon as it's affordable — a player who knows how to play, matching the stage-1 bot's philosophy): stage 2 completes at **tick 323** and stage 3 at **tick 505**. Two effects compound: (1) the stage-1→2 transition reward plus rollover cash (~250k) already covers over 40% of stage 2's 600k money goal before stage 2 even starts, and (2) unlocking the second industry (free) and MegaMall (20k) immediately roughly doubles the order-generation rate (two industries' `orderRate` sum, plus MegaMall's higher `trafficK`), so the money goal is reached in a small fraction of the proposed window regardless of how conservatively the bot paces its other spending (verified across several bot variants — aggressive and minimal-rescue restocking, with and without a daily-revenue spending cap — all land in the 300–850 tick range). This is a property of the stage 2/3 economy, not a bot artifact. Revised windows, with margin around the measured ticks: stage 2 **4–10 real minutes (240–600 ticks)**, stage 3 **6–13 real minutes (360–780 ticks)**.
 
 Windows are a proposal; tune in the test constants if the bot proves them wrong, and record the change in this spec.
 
@@ -231,7 +234,11 @@ Menu with three entries, each a sub-screen with a back button:
 
 - New actions reject with `lastReject` on funds, stage, invalid ids, invalid supplier / grade combos.
 - `fastForward` clamps ticks to `[0, 28800]`; missing `savedAt` / `hiddenAt` → no catch-up.
-- Version-1 saves are discarded with the existing "save không hợp lệ" toast → industry select.
+- Saves that fail `validateSave` (corrupt, or an older `SAVE_VERSION`) are discarded and the worker
+  answers `init` with `{ type: 'nosave', reason: 'invalid' }`. The store keeps that as `saveInvalid`
+  and the industry-select screen (`mode='start'`) shows a one-line amber notice above the cards —
+  "Bản lưu cũ không tương thích với phiên bản này nên đã được bỏ — sếp bắt đầu lại từ đầu." — so the
+  player is told why they are starting over. A plain `{ type: 'nosave' }` (no save at all) shows nothing.
 - The tutorial never blocks input; skip is always available.
 - The worker ignores unknown messages with a console warning (existing).
 

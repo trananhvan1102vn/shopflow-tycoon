@@ -87,3 +87,16 @@ export function unlocksAfterStage(stage: number): string[] {
   const next = (ST.stages as any[])[stage];
   return ((next?.unlocks ?? []) as string[]).filter((id) => UNLOCK_LABEL[id] !== undefined);
 }
+
+/** Mô tả hiệu ứng nâng cấp đúng con số trong data (C12). */
+export function upgradeEffectText(effect: Record<string, unknown>): string {
+  const parts: string[] = [];
+  if (effect.deliveryDaysMult != null) parts.push(`Ngày giao ×${effect.deliveryDaysMult}`);
+  if (effect.trafficMult != null) parts.push(`Khách ×${effect.trafficMult}`);
+  if (effect.robotSpeedMult != null) parts.push(`Tốc độ robot ×${effect.robotSpeedMult}`);
+  if (effect.cancelPenaltyHalf) parts.push('Phạt hủy đơn ÷2');
+  if (effect.ratingRegenPerHour != null) parts.push(`Rating hồi +${effect.ratingRegenPerHour}/giờ`);
+  if (effect.wholesaleMult != null) parts.push(`Giá sỉ ×${effect.wholesaleMult}`);
+  if (effect.commissionDelta != null) parts.push(`Hoa hồng mọi kênh ${Number(effect.commissionDelta) < 0 ? '−' : '+'}${Math.abs(Number(effect.commissionDelta) * 100)} điểm %`);
+  return parts.join(' · ');
+}

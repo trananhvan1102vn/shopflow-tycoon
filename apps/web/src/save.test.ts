@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAVE_VERSION, validateSave } from './save';
 
-const goodState = { money: 100000, packAccum: 0, orders: [] };
+const goodState = { money: 100000, packAccum: 0, orders: [], tutorial: { step: 0, done: false, rewarded: false }, questsDone: [] };
 const blob = (o: any) => JSON.stringify(o);
 
 describe('validateSave', () => {
@@ -33,5 +33,16 @@ describe('validateSave', () => {
   it('null / rỗng → null', () => {
     expect(validateSave(null)).toBeNull();
     expect(validateSave('')).toBeNull();
+  });
+  it('v2: thiếu tutorial hoặc questsDone → null', () => {
+    const { tutorial, ...noTut } = goodState;
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noTut }))).toBeNull();
+    const { questsDone, ...noQ } = goodState;
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noQ }))).toBeNull();
+  });
+  it('savedAt được trả về (null nếu thiếu / không phải số)', () => {
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: goodState }))!.savedAt).toBeNull();
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, savedAt: 1700000000000, state: goodState }))!.savedAt).toBe(1700000000000);
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, savedAt: 'x', state: goodState }))!.savedAt).toBeNull();
   });
 });

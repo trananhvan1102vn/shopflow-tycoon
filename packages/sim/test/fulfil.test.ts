@@ -16,9 +16,11 @@ function ready() {
   return s;
 }
 
+const noReturn = { next: () => 0.99 };
+
 describe('fulfilment', () => {
   it('delivers capacity×dt orders: 1 packer → 1 đơn/giây thực (dt=4)', () => {
-    let s = fulfilOrders(ready(), 4);
+    let s = fulfilOrders(ready(), 4, noReturn);
     expect(s.orders).toHaveLength(1);
     // 800 × (1−12% hoa hồng flea) = 704
     expect(s.money).toBe(100000 + 704);
@@ -32,7 +34,7 @@ describe('fulfilment', () => {
   });
   it('no stock → order waits', () => {
     const s0 = ready(); s0.inventory = {};
-    const s = fulfilOrders(s0, 4);
+    const s = fulfilOrders(s0, 4, noReturn);
     expect(s.orders).toHaveLength(2);
     expect(s.money).toBe(100000);
   });
@@ -41,7 +43,7 @@ describe('fulfilment', () => {
     expect(comboBonus(10)).toBeCloseTo(0.05);
     expect(comboBonus(200)).toBeCloseTo(0.5);
     const s0 = ready(); s0.onTimeStreak = 10;
-    const s = fulfilOrders(s0, 4);
+    const s = fulfilOrders(s0, 4, noReturn);
     expect(s.dayRevenue.flea).toBe(Math.round(800 * 1.05));
   });
   it('robot counts only with a shelf, +25% adjacent', () => {

@@ -23,9 +23,10 @@ docs            # kịch bản + mockup PNG
 - Không hard-code số liệu — import từ @shopflow/data.
 - Tiền dùng số nguyên cent (tránh float). SLA/giờ tính bằng phút game.
 - Mọi PR chạy `pnpm test`; harness fail nếu màn 1 lệch khỏi 15–25 phút.
+- Harness cân bằng: màn 1 = 15–25 phút thực; màn 2 và 3 có cửa sổ riêng trong test/harness.test.ts (xem spec M2a §1.9).
 
 ## Lộ trình
-M0 scaffold ✅ → M1 sim màn 1–2 + UI Kho/Nhập/Bán hàng ✅ (hoàn thành 2026-08-25) → M2 đủ 6 màn + sự kiện → M3 Capacitor iOS/Android + cloud save → M4 beta → M5 launch.
+M0 scaffold ✅ → M1 sim màn 1–2 + UI Kho/Nhập/Bán hàng ✅ (hoàn thành 2026-08-25) → M2a màn 3 + hướng dẫn/offline/Thêm ✅ (hoàn thành 2026-09-17) → M2b màn 4 + sự kiện → M2c màn 5–6 → M3 Capacitor iOS/Android + cloud save → M4 beta → M5 launch.
 
 ## Deploy (GitHub Pages)
 - Repo: https://github.com/trananhvan1102vn/shopflow-tycoon — mỗi lần push lên `master`, workflow `.github/workflows/deploy.yml` chạy `pnpm test`, build web app với `BASE_PATH=/shopflow-tycoon/` rồi publish `apps/web/dist`.

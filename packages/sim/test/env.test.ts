@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { trafficEnvMult, retailEnvMult, wholesaleEnvMult, hourMult, activeEvents } from '../src/env.js';
+import { trafficEnvMult, retailEnvMult, wholesaleEnvMult, activeEvents, nightMult, peakMultFor } from '../src/env.js';
 
 const at = (month: number, day: number, minute = 9 * 60) => ({ minute, day, month });
 
@@ -13,11 +13,6 @@ describe('env multipliers', () => {
     expect(retailEnvMult(at(1, 6), 'electronics')).toBeCloseTo(1.05);
     expect(wholesaleEnvMult(at(1, 6), 'electronics')).toBeCloseTo(0.95);
   });
-  it('peak hour ×2, night ×0.5', () => {
-    expect(hourMult(12 * 60)).toBe(2);
-    expect(hourMult(3 * 60)).toBe(0.5);
-    expect(hourMult(9 * 60)).toBe(1);
-  });
   it('Valentine hits fashion only', () => {
     expect(activeEvents(2, 14).map(e => e.id)).toContain('valentine');
     expect(trafficEnvMult(at(2, 16), 'fashion')).toBe(1);           // after window
@@ -28,5 +23,14 @@ describe('env multipliers', () => {
   it('double day (day === month): traffic ×3, retail ×2', () => {
     expect(trafficEnvMult(at(3, 3), 'electronics')).toBeCloseTo(3);
     expect(retailEnvMult(at(3, 3), 'electronics')).toBeCloseTo(2);
+  });
+});
+
+describe('nightMult / peakMultFor', () => {
+  it('night ×0.5, day 1; peak per channel', () => {
+    expect(nightMult(3 * 60)).toBe(0.5); expect(nightMult(12 * 60)).toBe(1);
+    expect(peakMultFor({ peakHourMult: 3 }, 12 * 60)).toBe(3);
+    expect(peakMultFor({ peakHourMult: 3 }, 9 * 60)).toBe(1);
+    expect(peakMultFor({}, 12 * 60)).toBe(1);
   });
 });
