@@ -171,13 +171,13 @@ Kết toán lúc 00:00 mỗi ngày, hiện **Báo cáo cuối ngày**:
 
 Thưởng qua màn: $400 / $4,800 / $20,000 / $60,000 / $160,000. Không có phá sản; hết tiền chỉ chặn mua sắm và tạm ngưng kênh có phí.
 
-Mục tiêu màn 2–5 được hiệu chỉnh ngày 2026-09-18 theo harness: màn 2 ≈ 15–30 phút thực, màn 3 ≈ 25–45 phút.
+Mục tiêu màn 2–5 được hiệu chỉnh ngày 2026-09-18 theo harness: màn 2 ≈ 15–30 phút thực, màn 3 ≈ 25–45 phút. Cửa sổ thời gian đo khi không dùng Qua ngày (Thêm ▸ Qua ngày tua thẳng tới 00:00).
 
 ---
 
 ## PHẦN C — ĐẶC TẢ MÀN HÌNH
 
-Điện thoại dọc 390×844 là chuẩn; máy tính bảng/desktop dùng bố cục 3 cột. Thanh điều hướng dưới (từ khi vào game): **📦 Kho · 🚚 Nhập · 🛍️ Bán hàng · 🔍 Quảng bá · ⋯ Thêm** (Thêm chứa Nâng cấp, Báo cáo, Tự động hóa, Lưu/Cài đặt). Tab chưa mở hiện ổ khóa + "Mở ở màn N".
+Điện thoại dọc 390×844 là chuẩn; máy tính bảng/desktop dùng bố cục 3 cột. Thanh điều hướng dưới (từ khi vào game): **📦 Kho · 🚚 Nhập · 🛍️ Bán hàng · 🔍 Quảng bá · ⋯ Thêm** (Thêm chứa Qua ngày, Nâng cấp, Báo cáo, Tự động hóa, Lưu/Cài đặt). Tab chưa mở hiện ổ khóa + "Mở ở màn N".
 
 ### C0. Splash / Tải game
 Logo, thanh tiến trình, phiên bản. Tải xong tự chuyển C1.
@@ -251,6 +251,9 @@ Bật/tắt ($8/ngày): tự nhập khi tồn ngành ≤ 10/20/30/50%, tự ch�
 
 ### C17. Lưu / Cài đặt (Thêm ▸)
 3 ô hồ sơ + tự lưu 60 giây; ngôn ngữ; âm thanh/nhạc/rung; tốc độ mặc định; đăng nhập & đồng bộ cloud; nút chơi lại hướng dẫn.
+
+### C18. Qua ngày (Thêm ▸)
+Hiện giờ hiện tại và thời gian còn lại tới 00:00; cảnh báo nếu có đơn đang chờ có thể quá hạn trước nửa đêm. Nút **⏭ Qua ngày** chạy mô phỏng thật tới 00:00 (đơn vẫn sinh, SLA vẫn tính, phí ngày vẫn trừ) rồi mở **C10** (Báo cáo cuối ngày).
 
 ---
 
