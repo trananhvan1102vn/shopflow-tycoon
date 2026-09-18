@@ -59,6 +59,7 @@ Người chơi mở một e-shop với **$1,000** và một ngành hàng tự ch
 | 🐾 Thú cưng | 1.0 ★★★ | $26 | +0.03 Rating/đơn, thức ăn hạn 120 ngày |
 
 Sản phẩm (giá bán / giá sỉ chuẩn): Điện tử — Ốp lưng $8/$2 · Cáp $16/$4 · Sạc dự phòng $40/$10 · Tai nghe $60/$15 · Đồng hồ $160/$40. Thời trang — Áo thun $20/$5 · Tất $10/$2.5 · Hoodie $40/$10 · Jeans $50/$12 · Sneakers $100/$25. Gia dụng — Máy sấy $25/$6 · Ấm $30/$8 · Hút bụi $120/$30 · Lò vi sóng $180/$45 · Lọc khí $280/$70. (5 ngành còn lại cùng khuôn 5 sản phẩm.)
+Sách & VPP — Bút bi $3/$0.75 · Vở $4/$1 · Sách bán chạy $16/$4 · Bộ bút màu $12/$3 · Balo $40/$10 (thêm 2026-09-18, M2b).
 
 ### B2. Nguồn nhập hàng
 
