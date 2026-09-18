@@ -165,8 +165,8 @@ describe('balance harness — màn 2 & 3', () => {
   // (~250k, đã hơn 40% mục tiêu 600k của màn 2) cộng hiệu ứng cộng dồn của ngành thứ 2 + MegaMall +
   // SEO khiến màn 2/3 đạt mục tiêu tiền nhanh hơn nhiều so với đề xuất ban đầu trong spec (1.9);
   // cửa sổ dưới đây thay thế con số đề xuất đó — xem ghi chú cùng ngày trong spec 1.9.
-  const S2 = { min: 240, max: 600 }; // 4–10 phút thực
-  const S3 = { min: 360, max: 780 }; // 6–13 phút thực
+  const S2 = { min: 900, max: 1800 };  // 15–30 phút thực sau màn 1 (quyết định 2026-09-18)
+  const S3 = { min: 1500, max: 2700 }; // 25–45 phút thực sau màn 2
   it('màn 2 xong trong 4–10 phút, màn 3 trong 6–13 phút, không kênh nào bị ngưng vì thiếu phí', () => {
     const rng = makeRng(20260917);
     let s = createGame(20260917, 'electronics');
