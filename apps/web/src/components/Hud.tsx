@@ -25,7 +25,7 @@ export default function Hud() {
       <div className="mx-auto max-w-md px-4 pb-2.5 pt-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xl font-extrabold tracking-tight">{usd(game.money)}</span>
-          <div className="text-right text-[11px] leading-tight text-white/75">
+          <div className="text-right text-[11px] leading-tight text-white/90">
             <div className="text-sm font-bold text-white">{gameTime(game.clock.minute)}</div>
             <div>{dateStr(game.clock)}</div>
           </div>
@@ -49,7 +49,7 @@ export default function Hud() {
             <div className="h-1 overflow-hidden rounded-full bg-white/20">
               <div className="h-full rounded-full bg-amber-300" style={{ width: `${pct}%` }} />
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-white/85">
+            <div className="mt-1 flex items-center justify-between text-[11px] text-white/90">
               <span><span className="rounded-full bg-white/15 px-2 py-0.5 font-extrabold text-white">Màn {game.stage}</span> · mục tiêu {pct}%</span>
               {q.total > 0 && <span className="rounded-full bg-amber-400 px-2 py-0.5 font-extrabold text-emerald-950">🎯 {q.done}/{q.total}</span>}
             </div>
@@ -65,7 +65,7 @@ function Tile({ value, label, title }: { value: string; label: string; title: st
   return (
     <div title={title} className="rounded-xl bg-white/15 py-1.5 text-center">
       <div className="text-sm font-bold leading-tight text-white">{value}</div>
-      <div className="text-[10px] text-white/75">{label}</div>
+      <div className="text-[10px] text-white/90">{label}</div>
     </div>
   );
 }

@@ -40,7 +40,7 @@ export default function EventToasts() {
   }, [returned, refunds, questsDone.length, stage]);
   if (notes.length === 0) return null;
   return (
-    <div className="pointer-events-none fixed left-1/2 top-32 z-50 flex -translate-x-1/2 flex-col gap-2">
+    <div className="pointer-events-none fixed left-1/2 top-40 z-50 flex -translate-x-1/2 flex-col gap-2">
       {notes.map((n) => (
         <div key={n.id} role="status" className={`rounded-lg px-4 py-2 text-sm font-bold text-white shadow-lg ${n.cls}`}>{n.text}</div>
       ))}

@@ -9,7 +9,7 @@ export default function QuestSheet({ onClose }: { onClose: () => void }) {
   const q = questProgress(game);
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50" onClick={onClose}
-      role="dialog" aria-modal="true" aria-label="Nhiệm vụ màn">
+      role="dialog" aria-modal="true" aria-label="Mục tiêu và nhiệm vụ màn">
       <div className="w-full max-w-md rounded-t-2xl bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold">Màn {game.stage}</h2>
         {p && (
