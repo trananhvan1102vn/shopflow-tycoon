@@ -96,6 +96,8 @@ priceWarsWon: number;
 
 Bot extended for stage 4: choose the fourth industry, open the Website, keep prices at 1, place the robot level-2 upgrade when affordable, expand to 5×5. Window: stage 4 completes 2,100–3,600 ticks after stage 3 (35–60 real min). If the window fails, retune the stage-4 goal (money/orders, reward 20%), not the window; record final numbers in game spec B9 and here.
 
+Measured 2026-09-18 (seed 20260917, `packages/sim/test/harness.test.ts`, describe "balance harness — màn 4"): with the untested ×5 extrapolation ($300,000 / 4,000 orders), the bot reached only $235,702 by tick 3,600 (window max) — cumulative completed orders and rating were already far past goal (orders ≥4,000 and rating 4.5 are met within the first ~300 ticks of stage 4, carried over from stages 1–3; money is the only binding constraint). Retuned per the tuning rule, keeping the ratio near 7,500 cents/order: goal `money: 22,000,000` ($220,000), `orders: 2,900`, reward `4,400,000` ($44,000, 20% of goal money). Stage 4 now completes at **tick 2,967** (well inside the 2,100–3,600 window), money=$220,056.73, orders=18,989, rating=5.0, no channel suspended for unpaid fees.
+
 ## Phase 2 — Web app (`apps/web`)
 
 - **Bán ▸ Giá bán** (`screens/SalesPricing.tsx`, stage 4; locked stub "Mở ở màn 4" before): one card per owned, unlocked product: name, list price, current price (`retail × mult`) with −/+ stepper over the data range, "≈ N đơn/giờ" (pure helper reusing the channel estimate with the product's mult), "lãi/đơn" (price − wholesale), "Về giá niêm yết" when mult ≠ 1. During a price war the targeted industry's cards show "Đối thủ: $X" and a red "đắt hơn đối thủ" tag while above it.
