@@ -8,25 +8,27 @@
       "unlocks": ["industry-choice-2", "channel-mall", "robot", "seo-1-2", "supplier-regional", "grades", "calendar", "seasonal-bundles", "grid-4x4", "carriers-all"] },
     { "n": 3, "goal": { "money": 10000000, "orders": 2000, "rating": 4.2 }, "reward": 2000000, "sla": 1080, "queueCap": 40,
       "unlocks": ["industry-choice-3", "channel-social", "supplier-overseas", "relationship", "upgrades", "market-cycle", "seo-3", "equipment-l2", "speed-2x"] },
-    { "n": 4, "goal": { "money": 30000000, "orders": 4000, "rating": 4.5 }, "reward": 6000000,  "sla": 720, "queueCap": 50,
+    { "n": 4, "goal": { "money": 22000000, "orders": 2900, "rating": 4.5 }, "reward": 4400000,  "sla": 720, "queueCap": 50,
       "unlocks": ["industry-choice-4", "channel-website", "custom-pricing", "random-events", "grid-5x5", "robot-l2"] },
     { "n": 5, "goal": { "money": 80000000, "orders": 7500, "rating": 4.7 }, "reward": 16000000, "sla": 720, "queueCap": 60,
       "unlocks": ["industry-choice-5", "automation", "equipment-l3", "grid-6x6", "achievements"] },
     { "n": 6, "goal": null, "unlocks": ["industries-6-8-purchasable", "leaderboard"] }
   ],
   "combo": { "ordersPerStep": 10, "bonusPerStep": 0.05, "maxBonus": 0.5 },
+  "pricing": { "min": 0.7, "max": 1.3, "step": 0.05, "elasticity": 1.5 },
   "quests": {
     "2": [
-      { "id": "open_mall",     "bonus": 5000 },
-      { "id": "buy_seasonal",  "bonus": 5000 },
-      { "id": "place_robot",   "bonus": 5000 },
-      { "id": "run_seo",       "bonus": 5000 }
+      { "id": "open_mall",     "bonus": 12000 },
+      { "id": "buy_seasonal",  "bonus": 12000 },
+      { "id": "place_robot",   "bonus": 12000 },
+      { "id": "run_seo",       "bonus": 12000 }
     ],
     "3": [
-      { "id": "relationship_3",    "bonus": 20000 },
-      { "id": "survive_recession", "bonus": 20000 },
-      { "id": "profit_5_days",     "bonus": 20000 }
-    ]
+      { "id": "relationship_3",    "bonus": 60000 },
+      { "id": "survive_recession", "bonus": 60000 },
+      { "id": "profit_5_days",     "bonus": 60000 }
+    ],
+    "4": [ { "id": "web_100_orders", "bonus": 300000, "threshold": 100 }, { "id": "win_price_war", "bonus": 300000, "threshold": 1 } ]
   },
   "rating": { "start": 4.0, "perDelivered": 0.02, "perCancelled": -0.1, "perCancelledWithCS": -0.05, "min": 1, "max": 5, "trafficFormula": "0.6 + 0.1 * rating" },
   "warehouse": {

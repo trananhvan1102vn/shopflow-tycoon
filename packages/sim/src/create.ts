@@ -19,6 +19,7 @@ export function createGame(seed: number, startIndustry: string): GameState {
     profitStreakDays: 0, recessionClean: true, survivedRecession: false,
     retailLotsBought: 0, bundleLotsBought: 0,
     tutorial: { step: 0, done: false, rewarded: false }, questsDone: [],
+    activeRandomEvents: [], priceMult: {}, priceWarsWon: 0,
     lastReject: null,
   };
 }

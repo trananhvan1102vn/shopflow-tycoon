@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
-import { stages as ST, industries as IND } from '@shopflow/data';
+import { stages as ST } from '@shopflow/data';
 import { useGame } from '../store';
 import { usd } from '../format';
 import { UNLOCK_LABEL, unlocksAfterStage } from '../report';
 import { questProgress, QUEST_LABEL } from '../goals';
+import { pickableIndustries } from '../industries';
 import IndustrySelect from './IndustrySelect';
 
 /** C13/C14 — overlay hoàn thành màn. `onClose` do App gọi để gỡ overlay. */
@@ -24,9 +25,11 @@ export default function StageComplete({ onClose }: { onClose: () => void }) {
   const goal = entry.goal ?? null;
   const reward: number = entry.reward ?? 0;
   const unlocks = unlocksAfterStage(stage);
-  const canPickIndustry = (IND.industries as any[]).some(
-    (i) => i.unlock === 'start-option' && !game.industries.includes(i.id),
-  );
+  // Ngành mở được ở màn SẮP vào (stage + 1, vì `advanceStage` chưa chạy tới khi bấm nút dưới) và
+  // còn dưới trần số ngành sở hữu của màn đó (khớp điều kiện reject trong `chooseIndustry` sim).
+  const nextStage = stage + 1;
+  const canPickIndustry =
+    pickableIndustries(game.industries, nextStage).length > 0 && game.industries.length < nextStage;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-emerald-700 text-white"

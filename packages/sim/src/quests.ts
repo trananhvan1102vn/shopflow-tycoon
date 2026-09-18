@@ -3,12 +3,12 @@ import { stages as ST, upgrades as UP } from '@shopflow/data';
 import type { GameState } from './types.js';
 import { relationshipLevel } from './suppliers.js';
 
-export interface QuestDef { id: string; bonus: number }
+export interface QuestDef { id: string; bonus: number; threshold?: number }
 
 export const questsForStage = (stage: number): QuestDef[] => ((ST as any).quests?.[String(stage)] ?? []) as QuestDef[];
 export const questDone = (s: GameState, id: string): boolean => s.questsDone.includes(id);
 
-const PREDICATES: Record<string, (s: GameState) => boolean> = {
+const PREDICATES: Record<string, (s: GameState, q: QuestDef) => boolean> = {
   open_mall: (s) => s.channels.some((c) => c.id === 'mall'),
   buy_seasonal: (s) => Object.values(s.seasonalBought).some((n) => n > 0),
   place_robot: (s) => s.grid.cells.some((c) => c?.type === 'robot'),
@@ -16,6 +16,10 @@ const PREDICATES: Record<string, (s: GameState) => boolean> = {
   relationship_3: (s) => Object.keys(s.relationships).some((id) => relationshipLevel(s, id) >= 2), // index 2 = "cấp 3" trong spec (cấp 1 = 0 XP)
   survive_recession: (s) => s.survivedRecession,
   profit_5_days: (s) => s.profitStreakDays >= 5,
+  // `?? 1` chỉ là mặc định cấu trúc "ít nhất một lần" — con số cân bằng thật nằm ở stages.json
+  // (validate.mjs bắt buộc hai nhiệm vụ này có threshold > 0).
+  web_100_orders: (s, q) => (s.channels.find((c) => c.id === 'website')?.ordersDelivered ?? 0) >= (q.threshold ?? 1),
+  win_price_war: (s, q) => s.priceWarsWon >= (q.threshold ?? 1),
 };
 
 /** Mọi id nhiệm vụ có predicate — dùng để đối chiếu với `stages.quests` trong test. */
@@ -27,7 +31,7 @@ export function checkQuests(s: GameState): GameState {
   for (const q of questsForStage(s.stage)) {
     if (out.questsDone.includes(q.id)) continue;
     const pred = PREDICATES[q.id];
-    if (!pred || !pred(out)) continue;
+    if (!pred || !pred(out, q)) continue;
     out = { ...out, money: out.money + q.bonus, dayQuestBonus: out.dayQuestBonus + q.bonus, questsDone: [...out.questsDone, q.id] };
   }
   return out;

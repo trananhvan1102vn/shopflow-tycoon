@@ -22,6 +22,8 @@ export const QUEST_LABEL: Record<string, string> = {
   relationship_3: 'Quan hệ nhà cung cấp cấp 3',
   survive_recession: 'Sống sót một kỳ Suy thoái',
   profit_5_days: 'Lãi ròng dương 5 ngày liên tiếp',
+  web_100_orders: 'Giao 100 đơn qua Website',
+  win_price_war: 'Thắng một chiến giá',
 };
 
 export function questProgress(game: Pick<GameState, 'stage' | 'questsDone'>) {

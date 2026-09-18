@@ -2,27 +2,37 @@ import { channels as CH, industries as IND, stages as ST } from '@shopflow/data'
 import type { GameState } from './types.js';
 import { modifiers } from './modifiers.js';
 import { peakMultFor } from './env.js';
+import { demandMult } from './pricing.js';
 
-/** trafficK hiệu dụng của một kênh sau khi áp levelBonus (dùng chung cho orderRate & channelWeights). */
-export function levelK(def: { trafficK: number }, level: number): number {
+/**
+ * trafficK hiệu dụng của một kênh sau khi áp loyalty (Website, spec 1.5) rồi levelBonus
+ * (dùng chung cho orderRate & channelWeights).
+ */
+export function levelK(
+  def: { trafficK: number; loyalty?: { kPerOrders: number; ordersStep: number; maxK: number } },
+  level: number,
+  ordersDelivered = 0,
+): number {
   let k = def.trafficK;
+  if (def.loyalty) k = Math.min(def.loyalty.maxK, k + def.loyalty.kPerOrders * Math.floor(ordersDelivered / def.loyalty.ordersStep));
   if (level >= 2) k *= CH.levelBonus['2'].kMult;
   if (level >= 3) k *= CH.levelBonus['3'].kMult;
   return k;
 }
 
 /** Spec B5: đơn/tick-10s cho một sản phẩm. Trả về r; số đơn = floor(r/5) + Bernoulli(frac). */
-export function orderRate(s: GameState, industryId: string, seoScore: number, envMult: number): number {
+export function orderRate(s: GameState, industryId: string, seoScore: number, envMult: number, productId?: string): number {
   const ind = IND.industries.find((i: any) => i.id === industryId)!;
   let channelSum = 0;
   for (const c of s.channels) {
     if (!c.open || c.suspended || c.ratingLocked) continue;
     const def = CH.channels.find((d: any) => d.id === c.id)!;
     const a = (CH.affinity as any)[industryId]?.[c.id] ?? 1;
-    channelSum += levelK(def, c.level) * a * peakMultFor(def, s.clock.minute);
+    channelSum += levelK(def, c.level, c.ordersDelivered) * a * peakMultFor(def, s.clock.minute);
   }
   const ratingMult = 0.6 + 0.1 * s.rating; // ST.rating.trafficFormula
-  return (seoScore / 5) * ind.V * channelSum * ratingMult * envMult * modifiers(s).traffic;
+  const priceMult = productId ? demandMult(s, productId) : 1;
+  return (seoScore / 5) * ind.V * channelSum * ratingMult * envMult * modifiers(s).traffic * priceMult;
 }
 
 /** Trọng số gán đơn vào kênh (B5). */
@@ -32,6 +42,6 @@ export function channelWeights(s: GameState, industryId: string): [string, numbe
     .map((c) => {
       const def = CH.channels.find((d: any) => d.id === c.id)!;
       const a = (CH.affinity as any)[industryId]?.[c.id] ?? 1;
-      return [c.id, levelK(def, c.level) * a * peakMultFor(def, s.clock.minute)] as [string, number];
+      return [c.id, levelK(def, c.level, c.ordersDelivered) * a * peakMultFor(def, s.clock.minute)] as [string, number];
     });
 }

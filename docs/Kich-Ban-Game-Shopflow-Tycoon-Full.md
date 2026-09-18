@@ -59,6 +59,7 @@ Người chơi mở một e-shop với **$1,000** và một ngành hàng tự ch
 | 🐾 Thú cưng | 1.0 ★★★ | $26 | +0.03 Rating/đơn, thức ăn hạn 120 ngày |
 
 Sản phẩm (giá bán / giá sỉ chuẩn): Điện tử — Ốp lưng $8/$2 · Cáp $16/$4 · Sạc dự phòng $40/$10 · Tai nghe $60/$15 · Đồng hồ $160/$40. Thời trang — Áo thun $20/$5 · Tất $10/$2.5 · Hoodie $40/$10 · Jeans $50/$12 · Sneakers $100/$25. Gia dụng — Máy sấy $25/$6 · Ấm $30/$8 · Hút bụi $120/$30 · Lò vi sóng $180/$45 · Lọc khí $280/$70. (5 ngành còn lại cùng khuôn 5 sản phẩm.)
+Sách & VPP — Bút bi $3/$0.75 · Vở $4/$1 · Sách bán chạy $16/$4 · Bộ bút màu $12/$3 · Balo $40/$10 (thêm 2026-09-18, M2b).
 
 ### B2. Nguồn nhập hàng
 
@@ -165,13 +166,13 @@ Kết toán lúc 00:00 mỗi ngày, hiện **Báo cáo cuối ngày**:
 | 1 🌱 | 1 ngành, nhập lẻ, 2 gói sỉ, kệ + bàn gói, nguồn nội địa, kênh Chợ Trời | $1,600 | 50 | 3.5 | Nhập lẻ · mua 1 gói · đặt kệ · thêm bàn gói · giao 50 đơn |
 | 2 👗 | Ngành 2, kênh MegaMall, robot, SEO 1–2, nguồn khu vực + hạng, lịch & gói mùa, kho 4×4, 3 hãng ship | $24,000 | 600 | 4.0 | Mở MegaMall · mua gói mùa · đặt robot · chạy SEO |
 | 3 🏠 | Ngành 3, kênh SocialShop, nguồn xa, quan hệ nguồn, nâng cấp, chu kỳ, 2x | $100,000 | 2,000 | 4.2 | Quan hệ cấp 3 · sống sót Suy thoái · lãi ròng dương 5 ngày liên tiếp |
-| 4 📚 | Ngành 4, Website riêng, tự đặt giá, sự kiện ngẫu nhiên, kho 5×5 | $300,000 | 4,000 | 4.5 | 100 đơn qua Website · thắng 1 chiến giá |
+| 4 📚 | Ngành 4, Website riêng, tự đặt giá, sự kiện ngẫu nhiên, kho 5×5 | $220,000 | 2,900 | 4.5 | 100 đơn qua Website · thắng 1 chiến giá |
 | 5 🎮 | Ngành 5, tự động hóa, thiết bị cấp 3, kho 6×6, thành tựu | $800,000 | 7,500 | 4.7 | Bật tự động nhập · combo +50% · 4 kênh cùng mở |
 | 6 🏆 | Ngành 6–8 (mua $2,000/ngành), bảng xếp hạng mùa | Tự do | — | — | — |
 
-Thưởng qua màn: $400 / $4,800 / $20,000 / $60,000 / $160,000. Không có phá sản; hết tiền chỉ chặn mua sắm và tạm ngưng kênh có phí.
+Thưởng qua màn: $400 / $4,800 / $20,000 / $44,000 / $160,000. Không có phá sản; hết tiền chỉ chặn mua sắm và tạm ngưng kênh có phí.
 
-Mục tiêu màn 2–5 được hiệu chỉnh ngày 2026-09-18 theo harness: màn 2 ≈ 15–30 phút thực, màn 3 ≈ 25–45 phút. Cửa sổ thời gian đo khi không dùng Qua ngày (Thêm ▸ Qua ngày tua thẳng tới 00:00).
+Mục tiêu màn 2–5 được hiệu chỉnh ngày 2026-09-18 theo harness: màn 2 ≈ 15–30 phút thực, màn 3 ≈ 25–45 phút, màn 4 ≈ 35–60 phút (goal $300,000/4,000 đơn hạ còn $220,000/2,900 đơn — đơn đã vượt xa mục tiêu từ trước khi vào màn 4 nhờ đơn tích lũy các màn trước, tiền là yếu tố giới hạn thực sự; xem harness `packages/sim/test/harness.test.ts`, tick đo được 2967/seed 20260917). Cửa sổ thời gian đo khi không dùng Qua ngày (Thêm ▸ Qua ngày tua thẳng tới 00:00).
 
 ---
 

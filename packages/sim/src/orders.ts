@@ -3,6 +3,7 @@ import type { GameState, Order, Rng } from './types.js';
 import { orderRate, channelWeights } from './formulas.js';
 import { trafficEnvMult, retailEnvMult, nightMult } from './env.js';
 import { modifiers } from './modifiers.js';
+import { priceMultOf } from './pricing.js';
 
 function pickWeighted(weights: [string, number][], rng: Rng): string {
   const total = weights.reduce((a, [, w]) => a + w, 0);
@@ -26,7 +27,7 @@ export function genOrders(s: GameState, rng: Rng): GameState {
     for (const p of ind.products) {
       if (((p as any).unlockStage ?? 1) > s.stage) continue;
       if ((s.inventory[p.id] ?? 0) <= 0) continue;
-      const r = orderRate(s, indId, s.seo[indId] ?? UP.seoStart, env);
+      const r = orderRate(s, indId, s.seo[indId] ?? UP.seoStart, env, p.id);
       const per = r / 5;
       let n = Math.floor(per);
       if (rng.next() < per - n) n++;
@@ -35,7 +36,7 @@ export function genOrders(s: GameState, rng: Rng): GameState {
         const order: Order = {
           id: `o${++seq}`, productId: p.id, industryId: indId,
           channelId: pickWeighted(weights, rng),
-          value: Math.round(p.retail * retailM * mod.retail),
+          value: Math.round(p.retail * priceMultOf(s, p.id) * retailM * mod.retail),
           slaLeft: stage.sla, state: 'queued',
         };
         orders.push(order);

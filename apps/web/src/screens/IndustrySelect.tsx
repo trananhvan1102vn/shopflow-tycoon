@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { industries as IND } from '@shopflow/data';
 import { useGame } from '../store';
 import { usd } from '../format';
+import { pickableIndustries } from '../industries';
 
 const ICONS: Record<string, string> = { electronics: '📱', fashion: '👗', home: '🏠', books: '📚', toys: '🎮', beauty: '💄', sports: '⚽', pets: '🐾' };
 
@@ -17,13 +18,20 @@ export default function IndustrySelect({ mode = 'start', onDone }: {
   const start = useGame((s) => s.start);
   const dispatch = useGame((s) => s.dispatch);
   const owned = useGame((s) => s.game?.industries) ?? [];
+  const stage = useGame((s) => s.game?.stage ?? 1);
   const saveInvalid = useGame((s) => s.saveInvalid);
   const [sel, setSel] = useState<string | null>(null);
   const next = mode === 'next';
-  const pickable = IND.industries.filter(
-    (i: any) => i.unlock === 'start-option' && (!next || !owned.includes(i.id)),
-  );
-  const locked = IND.industries.filter((i: any) => i.unlock !== 'start-option');
+  // `mode='next'`: ngành nào không sở hữu và (start-option hoặc mở theo màn, spec 1.7) là chọn được
+  // (dùng chung `pickableIndustries` với StageComplete); còn lại bị khóa với chip "Màn {unlock}".
+  // `mode='start'` giữ hành vi cũ (chỉ ba ngành khởi điểm).
+  const pickable = next
+    ? pickableIndustries(owned, stage)
+    : IND.industries.filter((i: any) => i.unlock === 'start-option');
+  const pickableIds = new Set(pickable.map((i: any) => i.id));
+  const locked = next
+    ? IND.industries.filter((i: any) => !owned.includes(i.id) && !pickableIds.has(i.id))
+    : IND.industries.filter((i: any) => i.unlock !== 'start-option');
   const confirm = () => {
     if (!sel) return;
     if (next) { dispatch('chooseIndustry', sel); onDone?.(); } else start(sel);
@@ -65,7 +73,9 @@ export default function IndustrySelect({ mode = 'start', onDone }: {
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         {locked.map((i: any) => (
-          <span key={i.id} className="rounded-lg bg-slate-200 px-3 py-1 text-sm text-slate-500">🔒 {ICONS[i.id]} {i.name}</span>
+          <span key={i.id} className="rounded-lg bg-slate-200 px-3 py-1 text-sm text-slate-500">
+            🔒 {ICONS[i.id]} {i.name}{typeof i.unlock === 'number' && ` · Màn ${i.unlock}`}
+          </span>
         ))}
       </div>
       <button disabled={!sel} onClick={confirm}

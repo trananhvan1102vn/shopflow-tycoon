@@ -2,6 +2,7 @@ import { industries as IND, calendar as CAL } from '@shopflow/data';
 import { useGame } from '../store';
 import { usdCents } from '../format';
 import { elapsedText } from '../offline';
+import { RANDOM_EVENT_NAME } from '../eventText';
 
 const PRODUCT_NAME: Record<string, string> = Object.fromEntries((IND.industries as any[]).flatMap((i) => i.products.map((p: any) => [p.id, p.name])));
 const EVENT_NAME = (id: string) => (CAL.events as any[]).find((e) => e.id === id)?.name ?? id;
@@ -25,8 +26,12 @@ export default function WelcomeBack() {
         {sum.daysSettled > 0 && (
           <Row label={`Chi phí ${sum.daysSettled} ngày (thuê, bảo trì, phí kênh)`} value={`−${usdCents(sum.feesPaid)}`} cls="text-rose-600" />
         )}
-        {sum.eventsStarted.length > 0 && <Row label="Sự kiện bắt đầu" value={sum.eventsStarted.map(EVENT_NAME).join(', ')} />}
-        {sum.eventsEnded.length > 0 && <Row label="Sự kiện đã qua" value={sum.eventsEnded.map(EVENT_NAME).join(', ')} />}
+        {(sum.eventsStarted.length > 0 || sum.randomEventsStarted.length > 0) && (
+          <Row label="Sự kiện bắt đầu" value={[...sum.eventsStarted.map(EVENT_NAME), ...sum.randomEventsStarted.map(RANDOM_EVENT_NAME)].join(', ')} />
+        )}
+        {(sum.eventsEnded.length > 0 || sum.randomEventsEnded.length > 0) && (
+          <Row label="Sự kiện đã qua" value={[...sum.eventsEnded.map(EVENT_NAME), ...sum.randomEventsEnded.map(RANDOM_EVENT_NAME)].join(', ')} />
+        )}
         {sum.lowStock.length > 0 && (
           <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">⚠️ Tồn thấp: {sum.lowStock.map((id) => PRODUCT_NAME[id] ?? id).join(', ')}</p>
         )}

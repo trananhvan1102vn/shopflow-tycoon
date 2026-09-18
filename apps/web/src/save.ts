@@ -1,5 +1,5 @@
 /** Định dạng save có version — bump khi shape của GameState đổi (save cũ bị bỏ, chơi mới). */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface SaveBlob {
   seed: number;
@@ -30,6 +30,11 @@ export function validateSave(raw: string | null): { seed: number; state: any; sa
   if (!Array.isArray(state.orders)) return null;
   if (!state.tutorial || typeof state.tutorial.step !== 'number') return null;
   if (!Array.isArray(state.questsDone)) return null;
+  if (!Array.isArray(state.activeRandomEvents)) return null;
+  // priceMult thiếu/sai kiểu ⇒ priceMultOf ném TypeError trong vòng lặp worker (UI đứng hình);
+  // priceWarsWon thiếu ⇒ priceWarsWon++ ra NaN và hỏng vĩnh viễn nhiệm vụ win_price_war.
+  if (!state.priceMult || typeof state.priceMult !== 'object' || Array.isArray(state.priceMult)) return null;
+  if (typeof state.priceWarsWon !== 'number' || !Number.isFinite(state.priceWarsWon)) return null;
   const savedAt = typeof parsed.savedAt === 'number' && Number.isFinite(parsed.savedAt) ? parsed.savedAt : null;
   return { seed: parsed.seed, state, savedAt };
 }

@@ -73,4 +73,18 @@ describe('fastForward', () => {
     expect(summary.eventsStarted).toContain('valentine');
     expect(summary.eventsEnded).toContain('valentine');
   });
+  it('random events (stage 4): started/ended counts match the id diff between start and end states', () => {
+    // Seed 25, 10 ngày: một sự kiện ngẫu nhiên (golden_hour) khởi động trong cửa sổ và
+    // vẫn còn hiệu lực ở cuối — chọn thực nghiệm để tránh một chu kỳ start+end trọn vẹn,
+    // vốn làm phép trừ tập hợp id đơn giản không còn phản ánh đúng tổng started+ended.
+    const s0 = createGame(25, 'electronics'); s0.stage = 4;
+    const idsBefore = new Set(s0.activeRandomEvents.map((e) => e.id));
+    const { state, summary } = fastForward(s0, 360 * 10, makeRng(25));
+    const idsAfter = new Set(state.activeRandomEvents.map((e) => e.id));
+    const diff = [...idsBefore].filter((id) => !idsAfter.has(id)).length
+      + [...idsAfter].filter((id) => !idsBefore.has(id)).length;
+    expect(summary.randomEventsStarted.length + summary.randomEventsEnded.length).toBe(diff);
+    expect(summary.randomEventsStarted).toContain('golden_hour');
+    expect(summary.randomEventsEnded).toEqual([]);
+  });
 });

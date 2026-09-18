@@ -22,6 +22,11 @@ describe('questProgress', () => {
     for (const x of q.list) expect(QUEST_LABEL[x.id]).toBeTruthy();
     expect(questProgress(g({ stage: 3 })).list.every((x) => QUEST_LABEL[x.id])).toBe(true);
   });
+  it('labels every quest id of every stage in data (fails if a future quest is added without a label)', () => {
+    for (const [stage, quests] of Object.entries(ST.quests as Record<string, { id: string }[]>)) {
+      for (const q of quests) expect(QUEST_LABEL[q.id], `stage ${stage}: ${q.id}`).toBeTruthy();
+    }
+  });
 });
 describe('overallGoalPct', () => {
   it('is the weakest goal', () => { expect(overallGoalPct(g({ money: 80000, completedOrders: 4, rating: 4.2 }))).toBe(8); });

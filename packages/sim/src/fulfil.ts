@@ -1,6 +1,8 @@
 import { channels as CH, stages as ST, suppliers as SUP, industries as IND } from '@shopflow/data';
 import type { GameState, Grade, Rng } from './types.js';
 import { modifiers } from './modifiers.js';
+import { randomEventDef } from './events.js';
+import { priceMultOf } from './pricing.js';
 
 const RETURN_RATING: Record<Grade, number> = { A: 0, B: -0.02, C: -0.05 }; // spec B2: hạng B/C −0.02/−0.05
 
@@ -67,6 +69,7 @@ export function fulfilOrders(s: GameState, dtGameMinutes: number, rng: Rng): Gam
   const dayRevenue = { ...s.dayRevenue }, dayOrders = { ...s.dayOrders };
   let { money, rating, dayCommission, onTimeStreak, completedOrders, returnedOrders, dayRefunds } = s;
   const channels = s.channels.map((c) => ({ ...c }));
+  const activeRandomEvents = s.activeRandomEvents.slice();
   const remaining = [] as typeof s.orders;
   for (const o of s.orders) {
     if (n > 0 && (inventory[o.productId] ?? 0) > 0) {
@@ -96,12 +99,20 @@ export function fulfilOrders(s: GameState, dtGameMinutes: number, rng: Rng): Gam
       completedOrders++;
       const ch = channels.find((c) => c.id === o.channelId);
       if (ch) ch.ordersDelivered++;
+      // Chiến giá: chỉ đếm đơn GIAO KHI đang bán ≤ giá đối thủ (spec 1.3, bảng quyết định).
+      // Đơn bị trả lại vẫn được tính — cùng ngữ nghĩa với `completedOrders` ở trên.
+      const warIdx = activeRandomEvents.findIndex((e) => {
+        const rival = randomEventDef(e.id)?.effects.rivalPriceMult;
+        return rival != null && e.industryId === o.industryId && priceMultOf(s, o.productId) <= rival;
+      });
+      if (warIdx >= 0) activeRandomEvents[warIdx] = { ...activeRandomEvents[warIdx], ordersDuring: activeRandomEvents[warIdx].ordersDuring + 1 };
     } else remaining.push(o);
   }
   return {
     ...s, packAccum: accum, inventory, inventoryGrades: grades, orders: remaining, money, rating,
     dayRevenue, dayOrders, dayCommission, onTimeStreak, completedOrders, returnedOrders, dayRefunds,
     channels, combo: comboBonus(onTimeStreak), bestCombo: Math.max(s.bestCombo, comboBonus(onTimeStreak)),
+    activeRandomEvents,
   };
 }
 

@@ -1,5 +1,5 @@
 import { channels as CH, calendar as CAL, industries as IND, upgrades as UP } from '@shopflow/data';
-import { commissionOf, nightMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
+import { commissionOf, levelK, nightMult, orderRate, trafficEnvMult, type ChannelState, type GameState } from '@shopflow/sim';
 import { useGame } from '../store';
 import { hourRanges, usd } from '../format';
 
@@ -21,9 +21,10 @@ const CH_SHORT: Record<string, string> = { flea: 'Chợ Trời', mall: 'MegaMall
  *
  * Suy diễn (khớp `genOrders` trong sim):
  * - Sinh đơn chạy mỗi 10 giây thực = 40 phút game.
- * - Mỗi lượt, mỗi sản phẩm CÒN TỒN sinh kỳ vọng `r / 5` đơn, với `r = orderRate(...)`.
+ * - Mỗi lượt, mỗi sản phẩm CÒN TỒN sinh kỳ vọng `r / 5` đơn, với `r = orderRate(..., productId)`
+ *   — theo TỪNG sản phẩm vì giá tự đặt (màn 4) làm mỗi sản phẩm có cầu khác nhau.
  * - 1 giờ game = 60 phút game = 60 / 40 = 1.5 lượt sinh.
- * → đơn/giờ game ≈ (r / 5) × 1.5 × (số sản phẩm còn tồn của ngành).
+ * → đơn/giờ game ≈ Σ sản phẩm còn tồn của ((r / 5) × 1.5).
  *
  * Kênh được cô lập bằng cách clone state chỉ chứa đúng kênh đó, nên con số là
  * phần đóng góp riêng của kênh (kênh đang tạm đóng/khóa → 0, đúng như sim).
@@ -32,13 +33,18 @@ const CH_SHORT: Record<string, string> = { flea: 'Chợ Trời', mall: 'MegaMall
 export function estOrdersPerGameHour(game: GameState, ch: ChannelState, industryId: string): number | null {
   const ind = IND.industries.find((i: any) => i.id === industryId);
   if (!ind) return null;
-  const stocked = ind.products.filter(
-    (p: any) => (p.unlockStage ?? 1) <= game.stage && (game.inventory[p.id] ?? 0) > 0,
-  ).length;
-  if (stocked === 0) return null;
+  const stockedIds = ind.products
+    .filter((p: any) => (p.unlockStage ?? 1) <= game.stage && (game.inventory[p.id] ?? 0) > 0)
+    .map((p: any) => p.id as string);
+  if (stockedIds.length === 0) return null;
   const env = trafficEnvMult(game.clock, industryId) * nightMult(game.clock.minute);
-  const r = orderRate({ ...game, channels: [ch] }, industryId, game.seo[industryId] ?? UP.seoStart, env);
-  return (r / 5) * 1.5 * stocked;
+  const seo = game.seo[industryId] ?? UP.seoStart;
+  let sum = 0;
+  for (const pid of stockedIds) {
+    const r = orderRate({ ...game, channels: [ch] }, industryId, seo, env, pid);
+    sum += (r / 5) * 1.5;
+  }
+  return sum;
 }
 
 /** Tổng đơn/giờ của một kênh trên tất cả ngành đang sở hữu. */
@@ -155,6 +161,9 @@ function ChannelCard({ def, game, dispatch }: {
   def: any; game: GameState; dispatch: (name: string, ...args: unknown[]) => void;
 }) {
   const st = game.channels.find((c) => c.id === def.id);
+  // Website (spec 1.5): K hiệu dụng tăng dần theo loyalty, hiển thị 2 chữ số thập phân, bỏ số 0 thừa.
+  const effK = levelK(def, st?.level ?? 1, st?.ordersDelivered ?? 0);
+  const fmtK = (n: number) => n.toFixed(2).replace(/\.?0+$/, '');
   const stageLocked = def.unlockStage > game.stage;
   const ratingLow = def.minRating != null && game.rating < def.minRating;
 
@@ -212,7 +221,9 @@ function ChannelCard({ def, game, dispatch }: {
         )}
         <p className="mt-0.5 text-xs text-slate-500">
           {commission > 0 ? `Hoa hồng ${(commission * 100).toFixed(0)}%` : 'Không hoa hồng'} ·{' '}
-          {def.dailyFee > 0 ? `${usd(def.dailyFee)}/ngày` : 'miễn phí'} · khách ×{def.trafficK}
+          {def.dailyFee > 0 ? `${usd(def.dailyFee)}/ngày` : 'miễn phí'} · khách ×{fmtK(effK)}
+          {def.loyalty &&
+            ` · +${def.loyalty.kPerOrders} mỗi ${def.loyalty.ordersStep} đơn (${(st?.ordersDelivered ?? 0) % def.loyalty.ordersStep}/${def.loyalty.ordersStep})`}
           {def.minRating != null && ` · cần Rating ≥ ${def.minRating}`}
         </p>
         {def.peakHourMult > BASE_PEAK_MULT && (

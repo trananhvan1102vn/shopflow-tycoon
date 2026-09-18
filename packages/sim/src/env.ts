@@ -10,6 +10,13 @@ export function activeEvents(month: number, day: number): CalEvent[] {
   return CAL.events.filter((e: any) => inRange(month, day, e.from, e.to));
 }
 
+/** Spec 1.6: các ngày lễ ngưng vận chuyển (New Year, Christmas 24–26/12). */
+export function logisticsSuspended(month: number, day: number): boolean {
+  return (CAL.events as any[]).some((e) =>
+    (e.logisticsSuspended && inRange(month, day, e.from, e.to)) ||
+    (e.logisticsSuspendedRange && inRange(month, day, e.logisticsSuspendedRange[0], e.logisticsSuspendedRange[1])));
+}
+
 const hits = (e: CalEvent, industryId: string) =>
   e.industries === 'all' || (e.industries as string[]).includes(industryId);
 

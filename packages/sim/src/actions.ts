@@ -5,6 +5,7 @@ import { shelfCapacity } from './logistics.js';
 import { modifiers } from './modifiers.js';
 import { supplierDef, supplierUnlocked, gradeAllowed, gradeCostMult, relationshipDiscount, relationshipPerks, addRelationshipXp } from './suppliers.js';
 import { checkQuests } from './quests.js';
+import { snapPriceMult } from './pricing.js';
 
 const ok = (s: GameState): GameState => checkQuests({ ...s, lastReject: null });
 const reject = (s: GameState, msg: string): GameState => ({ ...s, lastReject: msg });
@@ -28,7 +29,8 @@ const norm = (o: PurchaseOpts) => ({ carrierId: o.carrierId, supplierId: o.suppl
 function deliveryDays(s: GameState, baseDays: number, supplierId: string, carrierId: string): number {
   const sup = supplierDef(supplierId); const carrier = (SUP.carriers as any[]).find((c) => c.id === carrierId);
   const raw = baseDays + (sup?.extraDays ?? 0) + (carrier?.daysDelta ?? 0) + relationshipPerks(s, supplierId).daysDelta;
-  return Math.max(0, Math.round(raw * modifiers(s).deliveryDays));
+  const mod = modifiers(s, { supplierId });
+  return Math.max(0, Math.round(raw * mod.deliveryDays) + mod.deliveryDaysDelta + (supplierId === 'overseas' ? mod.overseasDaysDelta : 0));
 }
 
 function shipFee(s: GameState, carrierId: string, industryId: string | null, bundle: boolean): Cents {
@@ -38,6 +40,7 @@ function shipFee(s: GameState, carrierId: string, industryId: string | null, bun
   return Math.round((carrier?.fee ?? 0) * modifiers(s).shipping * mult);
 }
 
+// Nhập lẻ cố ý không áp modifiers().wholesale / wholesaleEnvMult (từ M2a) — backlog M2c.
 export function quoteRetail(s: GameState, productId: string, qty: number, o: PurchaseOpts) {
   const { carrierId, supplierId, grade } = norm(o);
   const f = findProduct(productId)!;
@@ -58,7 +61,7 @@ export function quoteBundle(s: GameState, industryId: string, bundleId: string, 
   if (!ind || !bundle) return { goods: 0, ship: 0, days: 0, discountPct: 0 };
   const sup = supplierDef(supplierId);
   let goods = bundle.cost * (sup?.costMult ?? 1) * gradeCostMult(s, supplierId, grade) * (1 - relationshipDiscount(s, supplierId))
-    * wholesaleEnvMult(s.clock, industryId) * modifiers(s).wholesale;
+    * wholesaleEnvMult(s.clock, industryId) * modifiers(s, { supplierId }).wholesale;
   let discountPct = 0;
   if (seasonalId) {
     const sb = (CAL.seasonalBundles as any[]).find((x) => x.id === seasonalId);
@@ -266,10 +269,22 @@ export function buyUpgrade(s: GameState, id: string): GameState {
 
 export function chooseIndustry(s: GameState, industryId: string): GameState {
   const ind = IND.industries.find((i: any) => i.id === industryId);
-  if (!ind || ind.unlock !== 'start-option') return reject(s, 'Ngành này chưa thể mở');
+  const unlockOk = !!ind && (ind.unlock === 'start-option' || Number(ind.unlock) <= s.stage);
+  if (!unlockOk) return reject(s, 'Ngành này chưa thể mở');
   if (s.industries.includes(industryId)) return reject(s, 'Ngành đã mở');
   if (s.industries.length >= s.stage) return reject(s, 'Chưa mở thêm ngành ở màn này');
   return ok({ ...s, industries: [...s.industries, industryId], seo: { ...s.seo, [industryId]: UP.seoStart } });
+}
+
+export function setPrice(s: GameState, productId: string, mult: number): GameState {
+  if (s.stage < 4) return reject(s, 'Tự đặt giá mở ở màn 4');
+  const f = findProduct(productId);
+  if (!f || !s.industries.includes(f.ind.id)) return reject(s, 'Sản phẩm không thuộc ngành của bạn');
+  if (((f.p as any).unlockStage ?? 1) > s.stage) return reject(s, `Mở ở màn ${(f.p as any).unlockStage}`);
+  const snapped = snapPriceMult(mult);
+  const priceMult = { ...s.priceMult };
+  if (snapped === 1) delete priceMult[productId]; else priceMult[productId] = snapped;
+  return ok({ ...s, priceMult });
 }
 
 export function advanceStage(s: GameState): GameState {

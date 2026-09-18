@@ -12,7 +12,7 @@ describe('modifiers', () => {
   it('neutral by default', () => {
     const m = modifiers(createGame(42, 'electronics'));
     expect(m).toEqual({ traffic: 1, retail: 1, wholesale: 1, shipping: 1, deliveryDays: 1, robotSpeed: 1,
-      commissionDelta: 0, cancelPenaltyMult: 1, ratingRegenPerHour: 0 });
+      commissionDelta: 0, cancelPenaltyMult: 1, ratingRegenPerHour: 0, deliveryDaysDelta: 0, overseasDaysDelta: 0 });
   });
   it('market cycle boom applies four multipliers', () => {
     const s = createGame(42, 'electronics'); s.marketCycle = 'boom';

@@ -65,10 +65,10 @@ priceWarsWon: number;
 ### 1.3 Random events (`events.ts`, new)
 
 - `rollRandomEvent(s, rng): GameState` — called at the end of `settleDay` when `s.stage ≥ fromStage`: first `expireEvents` (remove entries with `endsDay ≤ absDay(clock)`, applying end hooks), then if `activeRandomEvents.length < maxActive` and `rng.next() < dailyChance`, pick a def by weight (one draw), start it: `endsDay = absDay + days`; `industryId` = a random owned industry when `targetIndustry === 'owned'` (one draw); start hooks. Draw order is fixed: chance, def, industry.
-- Start/end hooks: `ratingDelta` → `rating += delta` at start (cap `rating.max`), `rating −= delta` at end (floor `rating.min`). Price war end → `won = every product of industryId has (priceMult ?? 1) ≤ rivalPriceMult && ordersDuring ≥ minOrders`; if won, `priceWarsWon++`.
+- Start/end hooks: `ratingDelta` → `rating += delta` at start (cap `rating.max`), storing the amount actually applied as `ActiveRandomEvent.ratingApplied` (it is smaller than `delta` at the cap); at end `rating −= (ratingApplied ?? delta)` (floor `rating.min`), so an event can never be a net rating loss. Price war end → `won = every unlocked product of industryId ((unlockStage ?? 1) ≤ s.stage) has (priceMult ?? 1) ≤ rivalPriceMult && ordersDuring ≥ minOrders`; if won, `priceWarsWon++`. Stage-locked products are excluded because `setPrice` refuses them and the Giá bán tab hides them. Because `ordersDuring` only counts deliveries made at or below the rival price (below), the win requires matching the rival *during* the war, not only at expiry — a last-day price drop does not win it (decisions table).
 - `activeEventDefs(s)` helper returns the defs of active entries; `modifiers()` folds `trafficMult`, `retailMult`, `wholesaleMult` multiplicatively and `deliveryDaysDelta` additively into a new `Modifiers.deliveryDaysDelta`; `overseasDaysDelta` into `Modifiers.overseasDaysDelta`. `modifiers(s, { supplierId })` skips `supply_crisis` effects when `relationshipPerks(s, supplierId).crisisImmune` (add that boolean to `relationshipPerks`).
 - `deliveryDays` adds `deliveryDaysDelta` and, for `supplierId === 'overseas'`, `overseasDaysDelta` after the multiplier.
-- `fulfilOrders` increments `ordersDuring` on the active price-war entry when the delivered order's `industryId` matches.
+- `fulfilOrders` increments `ordersDuring` on the active price-war entry when the delivered order's `industryId` matches **and** the order's product was sold at or below the rival (`priceMultOf(s, productId) ≤ rivalPriceMult`); deliveries made while priced above the rival never count. Refunded (returned) orders still count, consistent with `completedOrders`.
 
 ### 1.4 Custom pricing
 
@@ -95,6 +95,8 @@ priceWarsWon: number;
 ### 1.9 Harness
 
 Bot extended for stage 4: choose the fourth industry, open the Website, keep prices at 1, place the robot level-2 upgrade when affordable, expand to 5×5. Window: stage 4 completes 2,100–3,600 ticks after stage 3 (35–60 real min). If the window fails, retune the stage-4 goal (money/orders, reward 20%), not the window; record final numbers in game spec B9 and here.
+
+Measured 2026-09-18 (seed 20260917, `packages/sim/test/harness.test.ts`, describe "balance harness — màn 4"): with the untested ×5 extrapolation ($300,000 / 4,000 orders), the bot reached only $235,702 by tick 3,600 (window max) — cumulative completed orders and rating were already far past goal (orders ≥4,000 and rating 4.5 are met within the first ~300 ticks of stage 4, carried over from stages 1–3; money is the only binding constraint). Retuned per the tuning rule, keeping the ratio near 7,500 cents/order: goal `money: 22,000,000` ($220,000), `orders: 2,900`, reward `4,400,000` ($44,000, 20% of goal money). Stage 4 now completes at **tick 2,967** (well inside the 2,100–3,600 window), money=$220,056.73, orders=18,989, rating=5.0, no channel suspended for unpaid fees.
 
 ## Phase 2 — Web app (`apps/web`)
 

@@ -29,6 +29,10 @@ export interface DayReport {
 
 export interface TutorialState { step: number; done: boolean; rewarded: boolean }
 
+/** `ratingApplied`: phần uy tín THỰC SỰ được cộng lúc bắt đầu (sau khi kẹp trần/sàn) — hook kết
+ *  thúc hoàn lại đúng bằng nó. Tuỳ chọn để save v3 cũ (chưa có trường này) vẫn đọc được. */
+export interface ActiveRandomEvent { id: string; endsDay: number; industryId?: string; ordersDuring: number; ratingApplied?: number }
+
 export interface GameState {
   seed: number; clock: { minute: number; day: number; month: number; year: number };
   money: Cents; rating: number; stage: number; combo: number; bestCombo: number;
@@ -49,5 +53,6 @@ export interface GameState {
   profitStreakDays: number; recessionClean: boolean; survivedRecession: boolean;
   retailLotsBought: number; bundleLotsBought: number;
   tutorial: TutorialState; questsDone: string[];
+  activeRandomEvents: ActiveRandomEvent[]; priceMult: Record<string, number>; priceWarsWon: number;
   lastReject: string | null;
 }

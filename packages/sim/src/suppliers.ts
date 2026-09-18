@@ -38,22 +38,24 @@ export function relationshipXp(s: GameState, supplierId: string): { xp: number; 
   return { xp, level, nextXp: next ? next.xp : null };
 }
 
-export interface RelationshipPerks { exclusiveBundle: boolean; daysDelta: number }
+export interface RelationshipPerks { exclusiveBundle: boolean; daysDelta: number; crisisImmune: boolean }
 
 /**
  * Đặc quyền quan hệ là **cộng dồn**: mọi mốc đã vượt qua vẫn còn hiệu lực.
  * (Nếu chỉ đọc `levels[cấp hiện tại]` thì `exclusiveBundle` ở index 2 và `daysDelta`
  * ở index 3 sẽ biến mất khi lên cấp cao hơn — spec §1.2 nói ngược lại.)
+ * `crisisImmune` (M2b, cấp 5): miễn nhiễm sự kiện supply_crisis cho nhà cung cấp này.
  */
 export function relationshipPerks(s: GameState, supplierId: string): RelationshipPerks {
   const lv = relationshipLevel(s, supplierId);
   const levels = SUP.relationship.levels as any[];
-  let exclusiveBundle = false, daysDelta = 0;
+  let exclusiveBundle = false, daysDelta = 0, crisisImmune = false;
   for (let i = 0; i <= lv; i++) {
     if (levels[i]?.exclusiveBundle) exclusiveBundle = true;
+    if (levels[i]?.crisisImmune) crisisImmune = true;
     daysDelta += levels[i]?.daysDelta ?? 0;
   }
-  return { exclusiveBundle, daysDelta };
+  return { exclusiveBundle, daysDelta, crisisImmune };
 }
 
 /** Hệ số giá theo hạng; đặc quyền `exclusiveBundle` (cộng dồn): hạng A giá hạng B. */
