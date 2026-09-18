@@ -135,7 +135,7 @@ export default function Promo() {
               {def.effects.rivalPriceMult != null && entry.industryId && (
                 <p className="mt-0.5 text-xs text-violet-700">
                   {(IND.industries as any[]).find((i) => i.id === entry.industryId)?.name ?? entry.industryId} ·{' '}
-                  {entry.ordersDuring}/{def.minOrders} đơn
+                  {entry.ordersDuring}/{def.minOrders} đơn giá ≤ đối thủ
                 </p>
               )}
             </div>
