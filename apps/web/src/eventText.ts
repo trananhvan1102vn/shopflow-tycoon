@@ -24,3 +24,16 @@ export function eventEffectText(def: EventDef): string {
   if (e.abovePriceTrafficMult != null) parts.push(`khách ×${e.abovePriceTrafficMult} nếu đắt hơn`);
   return parts.join(' · ');
 }
+
+/**
+ * Diff hai tập khoá **theo instance** của sự kiện ngẫu nhiên (không phải theo id): mỗi khoá
+ * gồm `${id}@${endsDay}`, nên một sự kiện cùng id nhưng khởi động lại (endsDay mới, sau khi
+ * cái cũ vừa kết thúc trong cùng lần settle) tạo ra một khoá KHÁC — được tính là vừa kết thúc
+ * (khoá cũ) vừa bắt đầu (khoá mới), thay vì bị "biến mất" vì chuỗi id nối lại trùng nhau.
+ */
+export function diffEventKeys(prev: string[], next: string[]): { started: string[]; ended: string[] } {
+  return {
+    started: next.filter((k) => !prev.includes(k)),
+    ended: prev.filter((k) => !next.includes(k)),
+  };
+}

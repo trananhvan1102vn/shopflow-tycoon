@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calendar as CAL } from '@shopflow/data';
-import { eventEffectText, RANDOM_EVENT_NAME } from './eventText';
+import { diffEventKeys, eventEffectText, RANDOM_EVENT_NAME } from './eventText';
 
 /** Chuỗi chính xác cho từng def hiện có trong calendar.randomEvents.defs (spec Phase 2). */
 const EXPECTED: Record<string, string> = {
@@ -33,5 +33,23 @@ describe('RANDOM_EVENT_NAME', () => {
   });
   it('falls back to the raw id when unknown', () => {
     expect(RANDOM_EVENT_NAME('nope')).toBe('nope');
+  });
+});
+
+describe('diffEventKeys', () => {
+  it('reports no change when the key sets are identical', () => {
+    expect(diffEventKeys(['flash_sale@10'], ['flash_sale@10'])).toEqual({ started: [], ended: [] });
+  });
+  it('reports a new key as started', () => {
+    expect(diffEventKeys([], ['flash_sale@10'])).toEqual({ started: ['flash_sale@10'], ended: [] });
+  });
+  it('reports a removed key as ended', () => {
+    expect(diffEventKeys(['flash_sale@10'], [])).toEqual({ started: [], ended: ['flash_sale@10'] });
+  });
+  it('same-id restart in one update (new endsDay) yields one ended and one started', () => {
+    expect(diffEventKeys(['price_war@365'], ['price_war@368'])).toEqual({
+      started: ['price_war@368'],
+      ended: ['price_war@365'],
+    });
   });
 });

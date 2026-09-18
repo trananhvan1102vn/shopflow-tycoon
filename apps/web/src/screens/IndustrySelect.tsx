@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { industries as IND } from '@shopflow/data';
 import { useGame } from '../store';
 import { usd } from '../format';
+import { pickableIndustries } from '../industries';
 
 const ICONS: Record<string, string> = { electronics: '📱', fashion: '👗', home: '🏠', books: '📚', toys: '🎮', beauty: '💄', sports: '⚽', pets: '🐾' };
 
@@ -21,17 +22,15 @@ export default function IndustrySelect({ mode = 'start', onDone }: {
   const saveInvalid = useGame((s) => s.saveInvalid);
   const [sel, setSel] = useState<string | null>(null);
   const next = mode === 'next';
-  // `mode='next'`: ngành nào không sở hữu và (start-option hoặc mở theo màn, spec 1.7) là chọn được;
-  // còn lại bị khóa với chip "Màn {unlock}". `mode='start'` giữ hành vi cũ (chỉ ba ngành khởi điểm).
+  // `mode='next'`: ngành nào không sở hữu và (start-option hoặc mở theo màn, spec 1.7) là chọn được
+  // (dùng chung `pickableIndustries` với StageComplete); còn lại bị khóa với chip "Màn {unlock}".
+  // `mode='start'` giữ hành vi cũ (chỉ ba ngành khởi điểm).
   const pickable = next
-    ? IND.industries.filter(
-        (i: any) => !owned.includes(i.id) && (i.unlock === 'start-option' || Number(i.unlock) <= stage),
-      )
+    ? pickableIndustries(owned, stage)
     : IND.industries.filter((i: any) => i.unlock === 'start-option');
+  const pickableIds = new Set(pickable.map((i: any) => i.id));
   const locked = next
-    ? IND.industries.filter(
-        (i: any) => owned.includes(i.id) ? false : !(i.unlock === 'start-option' || Number(i.unlock) <= stage),
-      )
+    ? IND.industries.filter((i: any) => !owned.includes(i.id) && !pickableIds.has(i.id))
     : IND.industries.filter((i: any) => i.unlock !== 'start-option');
   const confirm = () => {
     if (!sel) return;

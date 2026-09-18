@@ -3,7 +3,7 @@ import { useGame } from '../store';
 import { usd, usdCents } from '../format';
 import { questsForStage, randomEventDef } from '@shopflow/sim';
 import { QUEST_LABEL } from '../goals';
-import { RANDOM_EVENT_NAME } from '../eventText';
+import { diffEventKeys, RANDOM_EVENT_NAME } from '../eventText';
 
 interface Note { id: number; text: string; cls: string }
 
@@ -15,9 +15,12 @@ export default function EventToasts() {
   const stage = useGame((s) => s.game?.stage ?? 1);
   const activeRandomEvents = useGame((s) => s.game?.activeRandomEvents ?? []);
   const priceWarsWon = useGame((s) => s.game?.priceWarsWon ?? 0);
-  const eventIds = activeRandomEvents.map((e) => e.id).join(',');
+  // Khoá theo INSTANCE (`id@endsDay`), không phải theo id trần: một sự kiện cùng id khởi động lại
+  // ngay trong cùng lần settle (cái cũ vừa hết, cái mới bắt đầu) có `endsDay` khác nên vẫn tạo ra
+  // hai khoá khác nhau — nếu chỉ nối id, chuỗi trước/sau trùng nhau và cả hai toast sẽ biến mất.
+  const eventKeys = activeRandomEvents.map((e) => `${e.id}@${e.endsDay}`).join(',');
   const [notes, setNotes] = useState<Note[]>([]);
-  const prev = useRef<{ returned: number; refunds: number; quests: number; eventIds: string; priceWarsWon: number } | null>(null);
+  const prev = useRef<{ returned: number; refunds: number; quests: number; eventKeys: string; priceWarsWon: number } | null>(null);
   const seq = useRef(0);
   const push = (text: string, cls: string) => {
     const id = ++seq.current;
@@ -26,7 +29,7 @@ export default function EventToasts() {
   };
   useEffect(() => {
     const p = prev.current;
-    prev.current = { returned, refunds, quests: questsDone.length, eventIds, priceWarsWon };
+    prev.current = { returned, refunds, quests: questsDone.length, eventKeys, priceWarsWon };
     if (!p) return;
     if (returned > p.returned) {
       const n = returned - p.returned;
@@ -41,11 +44,13 @@ export default function EventToasts() {
         push(`✓ Nhiệm vụ: ${QUEST_LABEL[id] ?? id} +${usd(bonus)}`, 'bg-emerald-700');
       }
     }
-    if (eventIds !== p.eventIds) {
-      const before = p.eventIds ? p.eventIds.split(',') : [];
-      const after = eventIds ? eventIds.split(',') : [];
-      for (const id of after) if (!before.includes(id)) push(`⚡ ${RANDOM_EVENT_NAME(id)} bắt đầu`, 'bg-violet-700');
-      for (const id of before) if (!after.includes(id)) {
+    if (eventKeys !== p.eventKeys) {
+      const before = p.eventKeys ? p.eventKeys.split(',') : [];
+      const after = eventKeys ? eventKeys.split(',') : [];
+      const { started, ended } = diffEventKeys(before, after);
+      for (const key of started) push(`⚡ ${RANDOM_EVENT_NAME(key.split('@')[0])} bắt đầu`, 'bg-violet-700');
+      for (const key of ended) {
+        const id = key.split('@')[0];
         const def = randomEventDef(id);
         if (def?.effects.rivalPriceMult != null) {
           const won = priceWarsWon > p.priceWarsWon;
@@ -55,7 +60,7 @@ export default function EventToasts() {
         }
       }
     }
-  }, [returned, refunds, questsDone.length, stage, eventIds, priceWarsWon]);
+  }, [returned, refunds, questsDone.length, stage, eventKeys, priceWarsWon]);
   if (notes.length === 0) return null;
   return (
     <div className="pointer-events-none fixed left-1/2 top-40 z-50 flex -translate-x-1/2 flex-col gap-2">
