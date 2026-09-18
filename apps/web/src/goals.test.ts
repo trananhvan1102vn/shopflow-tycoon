@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { goalProgress, questProgress, QUEST_LABEL } from './goals';
+import { goalProgress, questProgress, QUEST_LABEL, overallGoalPct } from './goals';
 import { stages as ST } from '@shopflow/data';
 
 const g = (over: any = {}) => ({ stage: 1, money: 80000, completedOrders: 25, rating: 4.2, questsDone: [], ...over }) as any;
@@ -22,4 +22,8 @@ describe('questProgress', () => {
     for (const x of q.list) expect(QUEST_LABEL[x.id]).toBeTruthy();
     expect(questProgress(g({ stage: 3 })).list.every((x) => QUEST_LABEL[x.id])).toBe(true);
   });
+});
+describe('overallGoalPct', () => {
+  it('is the weakest goal', () => { expect(overallGoalPct(g({ money: 80000, completedOrders: 4, rating: 4.2 }))).toBe(8); });
+  it('null without a goal', () => { expect(overallGoalPct(g({ stage: 6 }))).toBeNull(); });
 });

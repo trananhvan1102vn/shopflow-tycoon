@@ -72,7 +72,7 @@ export default function SalesOrders() {
       {expired && (
         <div
           role="status"
-          className="fixed left-1/2 top-16 z-50 -translate-x-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg"
+          className="fixed left-1/2 top-40 z-50 -translate-x-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg"
         >
           {expired.msg}
         </div>

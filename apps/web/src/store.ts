@@ -21,6 +21,7 @@ interface GameStore {
   visited: Tab[];
   dispatch: (name: string, ...args: unknown[]) => void;
   start: (industryId: string) => void;
+  skipDay: () => void;
   setPaused: (p: boolean) => void;
   setModalPaused: (p: boolean) => void;
   setSpeed: (n: 1 | 2) => void;
@@ -88,6 +89,7 @@ export const useGame = create<GameStore>((set, get) => {
     offlineSummary: null, supplierId: 'local', grade: 'B', visited: [],
     dispatch: (name, ...args) => w.postMessage({ type: 'action', name, args }),
     start: (industryId) => w.postMessage({ type: 'start', seed: get().seed, industryId }),
+    skipDay: () => w.postMessage({ type: 'skipDay' }),
     setPaused: (paused) => { set({ userPaused: paused }); syncWorker(); },
     setModalPaused: (paused) => { set({ modalPaused: paused }); syncWorker(); },
     setSpeed: (speed) => { set({ speed }); w.postMessage({ type: 'setSpeed', speed }); },

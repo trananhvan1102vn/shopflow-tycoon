@@ -161,13 +161,12 @@ function runStage(
 
 describe('balance harness — màn 2 & 3', () => {
   // Đã đo lại bằng botAct2 (mở ngành/kênh/SEO ngay khi đủ tiền — người chơi biết chơi, không giữ
-  // vốn không cần thiết): màn 2 xong ở tick 323, màn 3 ở tick 505 (seed 20260917). Vốn lận màn 1
-  // (~250k, đã hơn 40% mục tiêu 600k của màn 2) cộng hiệu ứng cộng dồn của ngành thứ 2 + MegaMall +
-  // SEO khiến màn 2/3 đạt mục tiêu tiền nhanh hơn nhiều so với đề xuất ban đầu trong spec (1.9);
-  // cửa sổ dưới đây thay thế con số đề xuất đó — xem ghi chú cùng ngày trong spec 1.9.
-  const S2 = { min: 240, max: 600 }; // 4–10 phút thực
-  const S3 = { min: 360, max: 780 }; // 6–13 phút thực
-  it('màn 2 xong trong 4–10 phút, màn 3 trong 6–13 phút, không kênh nào bị ngưng vì thiếu phí', () => {
+  // vốn không cần thiết): với mục tiêu màn 2/3 đã hiệu chỉnh ngày 2026-09-18 để khớp cửa sổ mới
+  // (màn 2 15–30 phút thực, màn 3 25–45 phút — xem ghi chú cùng ngày trong spec 1.9), màn 2 xong ở
+  // tick 1035 và màn 3 ở tick 2339 (seed 20260917); cả hai đều nằm trong cửa sổ bên dưới.
+  const S2 = { min: 900, max: 1800 };  // 15–30 phút thực sau màn 1 (quyết định 2026-09-18)
+  const S3 = { min: 1500, max: 2700 }; // 25–45 phút thực sau màn 2
+  it('màn 2 xong trong 15–30 phút, màn 3 trong 25–45 phút, không kênh nào bị ngưng vì thiếu phí', () => {
     const rng = makeRng(20260917);
     let s = createGame(20260917, 'electronics');
     const stage1 = runStage(s, rng, botAct, 1501);

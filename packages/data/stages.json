@@ -4,13 +4,13 @@
   "stages": [
     { "n": 1, "goal": { "money": 160000,   "orders": 50,   "rating": 3.5 }, "reward": 40000,   "sla": 1440, "queueCap": 20,
       "unlocks": ["industry-choice-1", "retail-restock", "bundles-basic", "shelf", "packer", "supplier-local", "channel-flea"] },
-    { "n": 2, "goal": { "money": 600000,   "orders": 150,  "rating": 4.0 }, "reward": 120000,  "sla": 1440, "queueCap": 30,
+    { "n": 2, "goal": { "money": 2400000,  "orders": 600,  "rating": 4.0 }, "reward": 480000,  "sla": 1440, "queueCap": 30,
       "unlocks": ["industry-choice-2", "channel-mall", "robot", "seo-1-2", "supplier-regional", "grades", "calendar", "seasonal-bundles", "grid-4x4", "carriers-all"] },
-    { "n": 3, "goal": { "money": 2000000,  "orders": 400,  "rating": 4.2 }, "reward": 400000,  "sla": 1080, "queueCap": 40,
+    { "n": 3, "goal": { "money": 10000000, "orders": 2000, "rating": 4.2 }, "reward": 2000000, "sla": 1080, "queueCap": 40,
       "unlocks": ["industry-choice-3", "channel-social", "supplier-overseas", "relationship", "upgrades", "market-cycle", "seo-3", "equipment-l2", "speed-2x"] },
-    { "n": 4, "goal": { "money": 6000000,  "orders": 800,  "rating": 4.5 }, "reward": 1200000, "sla": 720, "queueCap": 50,
+    { "n": 4, "goal": { "money": 30000000, "orders": 4000, "rating": 4.5 }, "reward": 6000000,  "sla": 720, "queueCap": 50,
       "unlocks": ["industry-choice-4", "channel-website", "custom-pricing", "random-events", "grid-5x5", "robot-l2"] },
-    { "n": 5, "goal": { "money": 16000000, "orders": 1500, "rating": 4.7 }, "reward": 4000000, "sla": 720, "queueCap": 60,
+    { "n": 5, "goal": { "money": 80000000, "orders": 7500, "rating": 4.7 }, "reward": 16000000, "sla": 720, "queueCap": 60,
       "unlocks": ["industry-choice-5", "automation", "equipment-l3", "grid-6x6", "achievements"] },
     { "n": 6, "goal": null, "unlocks": ["industries-6-8-purchasable", "leaderboard"] }
   ],
