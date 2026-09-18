@@ -3,6 +3,7 @@ import type { GameState, DayReport, Rng } from './types.js';
 import { advanceShipping } from './logistics.js';
 import { decayRelationships } from './suppliers.js';
 import { checkQuests } from './quests.js';
+import { rollRandomEvent } from './events.js';
 
 /** Chu kỳ thị trường: chọn trạng thái theo trọng số p, đúng thứ tự trong data. */
 export function rollMarketCycle(rng: Rng): string {
@@ -71,5 +72,7 @@ export function settleDay(s: GameState, rng: Rng): GameState {
     profitStreakDays: report.net > 0 ? s.profitStreakDays + 1 : 0,
     dayRevenue: {}, dayOrders: {}, dayCommission: 0, dayPurchases: 0, dayRefunds: 0, dayQuestBonus: 0,
   };
-  return checkQuests(out);
+  // M2b: sự kiện ngẫu nhiên rút RNG sau cùng — sau rủi ro từng lô hàng (advanceShipping) và
+  // chu kỳ thị trường (rollMarketCycle) đã rút ở trên. Xem thứ tự rút trong events.ts.
+  return checkQuests(rollRandomEvent(out, rng));
 }

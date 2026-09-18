@@ -73,18 +73,18 @@ describe('relationship', () => {
     const s = rich(3);
     s.relationships = { local: { xp: 200, lastPurchaseDay: 8 }, regional: { xp: 200, lastPurchaseDay: 8 } };
     expect(relationshipLevel(s, 'local')).toBe(4);
-    expect(relationshipPerks(s, 'local')).toEqual({ exclusiveBundle: true, daysDelta: -1 });
+    expect(relationshipPerks(s, 'local')).toEqual({ exclusiveBundle: true, daysDelta: -1, crisisImmune: true });
     expect(gradeCostMult(s, 'local', 'A')).toBe(1.0);
     const q = quoteBundle(s, 'electronics', 'starter', { carrierId: 'standard', supplierId: 'regional' });
     expect(q.days).toBe(1 + 2 - 1);
   });
   it('perks accumulate level by level', () => {
     const at = (xp: number) => { const s = rich(3); s.relationships = { local: { xp, lastPurchaseDay: 8 } }; return relationshipPerks(s, 'local'); };
-    expect(at(0)).toEqual({ exclusiveBundle: false, daysDelta: 0 });
-    expect(at(10)).toEqual({ exclusiveBundle: false, daysDelta: 0 });
-    expect(at(30)).toEqual({ exclusiveBundle: true, daysDelta: 0 });
-    expect(at(80)).toEqual({ exclusiveBundle: true, daysDelta: -1 });
-    expect(at(200)).toEqual({ exclusiveBundle: true, daysDelta: -1 });
+    expect(at(0)).toEqual({ exclusiveBundle: false, daysDelta: 0, crisisImmune: false });
+    expect(at(10)).toEqual({ exclusiveBundle: false, daysDelta: 0, crisisImmune: false });
+    expect(at(30)).toEqual({ exclusiveBundle: true, daysDelta: 0, crisisImmune: false });
+    expect(at(80)).toEqual({ exclusiveBundle: true, daysDelta: -1, crisisImmune: false });
+    expect(at(200)).toEqual({ exclusiveBundle: true, daysDelta: -1, crisisImmune: true });
   });
   it('retailUnitPrice unchanged for local/B', () => {
     expect(retailUnitPrice(createGame(42, 'electronics'), 'phone_case')).toBe(240);

@@ -28,7 +28,8 @@ const norm = (o: PurchaseOpts) => ({ carrierId: o.carrierId, supplierId: o.suppl
 function deliveryDays(s: GameState, baseDays: number, supplierId: string, carrierId: string): number {
   const sup = supplierDef(supplierId); const carrier = (SUP.carriers as any[]).find((c) => c.id === carrierId);
   const raw = baseDays + (sup?.extraDays ?? 0) + (carrier?.daysDelta ?? 0) + relationshipPerks(s, supplierId).daysDelta;
-  return Math.max(0, Math.round(raw * modifiers(s).deliveryDays));
+  const mod = modifiers(s, { supplierId });
+  return Math.max(0, Math.round(raw * mod.deliveryDays) + mod.deliveryDaysDelta + (supplierId === 'overseas' ? mod.overseasDaysDelta : 0));
 }
 
 function shipFee(s: GameState, carrierId: string, industryId: string | null, bundle: boolean): Cents {
@@ -58,7 +59,7 @@ export function quoteBundle(s: GameState, industryId: string, bundleId: string, 
   if (!ind || !bundle) return { goods: 0, ship: 0, days: 0, discountPct: 0 };
   const sup = supplierDef(supplierId);
   let goods = bundle.cost * (sup?.costMult ?? 1) * gradeCostMult(s, supplierId, grade) * (1 - relationshipDiscount(s, supplierId))
-    * wholesaleEnvMult(s.clock, industryId) * modifiers(s).wholesale;
+    * wholesaleEnvMult(s.clock, industryId) * modifiers(s, { supplierId }).wholesale;
   let discountPct = 0;
   if (seasonalId) {
     const sb = (CAL.seasonalBundles as any[]).find((x) => x.id === seasonalId);
