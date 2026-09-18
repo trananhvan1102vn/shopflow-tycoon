@@ -21,7 +21,17 @@
     { "id": "boom",       "p": 0.25, "traffic": 1.25, "retail": 1.15, "wholesale": 1.1, "shipping": 1.2 },
     { "id": "slow",       "p": 0.20, "traffic": 0.9,  "retail": 0.95, "wholesale": 0.9, "shipping": 0.9 },
     { "id": "recession",  "p": 0.15, "traffic": 0.75, "retail": 0.85, "wholesale": 0.8, "shipping": 0.85 } ] },
-  "randomEvents": { "fromStage": 4, "dailyChance": 0.10, "pool": ["flash_sale", "supply_crisis", "kol_review", "golden_hour", "customs_strike"] },
+  "randomEvents": {
+    "fromStage": 4, "dailyChance": 0.10, "maxActive": 1,
+    "defs": [
+      { "id": "flash_sale",     "name": "Flash Sale",           "days": 2, "weight": 1, "effects": { "retailMult": 2.0 } },
+      { "id": "supply_crisis",  "name": "Khủng hoảng nguồn",    "days": 3, "weight": 1, "effects": { "wholesaleMult": 1.5, "deliveryDaysDelta": 1 } },
+      { "id": "kol_review",     "name": "KOL Review",           "days": 2, "weight": 1, "effects": { "ratingDelta": 0.5 } },
+      { "id": "golden_hour",    "name": "Giờ Vàng",             "days": 1, "weight": 1, "effects": { "trafficMult": 3.0 } },
+      { "id": "customs_strike", "name": "Đình công hải quan",   "days": 4, "weight": 1, "effects": { "overseasDaysDelta": 3 } },
+      { "id": "price_war",      "name": "Chiến giá",            "days": 3, "weight": 1, "effects": { "rivalPriceMult": 0.85, "abovePriceTrafficMult": 0.5 }, "targetIndustry": "owned", "minOrders": 20 }
+    ]
+  },
   "seasonalBundles": [
     { "id": "valentine_gift", "window": [[2, 1], [2, 13]], "industries": ["fashion", "beauty"], "discount": 0.15, "limit": 3 },
     { "id": "back_school",    "window": [[8, 1], [8, 19]], "industries": ["books", "electronics"], "discount": 0.15, "limit": 3 },

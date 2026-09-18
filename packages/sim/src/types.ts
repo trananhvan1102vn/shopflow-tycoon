@@ -29,6 +29,8 @@ export interface DayReport {
 
 export interface TutorialState { step: number; done: boolean; rewarded: boolean }
 
+export interface ActiveRandomEvent { id: string; endsDay: number; industryId?: string; ordersDuring: number }
+
 export interface GameState {
   seed: number; clock: { minute: number; day: number; month: number; year: number };
   money: Cents; rating: number; stage: number; combo: number; bestCombo: number;
@@ -49,5 +51,6 @@ export interface GameState {
   profitStreakDays: number; recessionClean: boolean; survivedRecession: boolean;
   retailLotsBought: number; bundleLotsBought: number;
   tutorial: TutorialState; questsDone: string[];
+  activeRandomEvents: ActiveRandomEvent[]; priceMult: Record<string, number>; priceWarsWon: number;
   lastReject: string | null;
 }

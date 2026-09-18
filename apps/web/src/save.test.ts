@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAVE_VERSION, validateSave } from './save';
 
-const goodState = { money: 100000, packAccum: 0, orders: [], tutorial: { step: 0, done: false, rewarded: false }, questsDone: [] };
+const goodState = { money: 100000, packAccum: 0, orders: [], tutorial: { step: 0, done: false, rewarded: false }, questsDone: [], activeRandomEvents: [] };
 const blob = (o: any) => JSON.stringify(o);
 
 describe('validateSave', () => {
@@ -39,6 +39,10 @@ describe('validateSave', () => {
     expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noTut }))).toBeNull();
     const { questsDone, ...noQ } = goodState;
     expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noQ }))).toBeNull();
+  });
+  it('v3: thiếu activeRandomEvents → null', () => {
+    const { activeRandomEvents, ...noEvents } = goodState;
+    expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: noEvents }))).toBeNull();
   });
   it('savedAt được trả về (null nếu thiếu / không phải số)', () => {
     expect(validateSave(blob({ seed: 42, version: SAVE_VERSION, state: goodState }))!.savedAt).toBeNull();

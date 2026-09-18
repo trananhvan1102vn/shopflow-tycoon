@@ -20,6 +20,12 @@ describe('createGame v2 fields', () => {
     expect(s.dayRefunds).toBe(0);
     expect(s.dayQuestBonus).toBe(0);
   });
+  it('M2b fields', () => {
+    const s = createGame(42, 'electronics');
+    expect(s.activeRandomEvents).toEqual([]);
+    expect(s.priceMult).toEqual({});
+    expect(s.priceWarsWon).toBe(0);
+  });
   it('absDay: 12 tháng × 30 ngày', () => {
     expect(absDay({ day: 6, month: 1, year: 1 })).toBe(6);
     expect(absDay({ day: 1, month: 2, year: 1 })).toBe(31);

@@ -34,4 +34,16 @@ for (const [st, list] of Object.entries(d.stages.quests ?? {})) {
   }
 }
 if (!(d.stages.tutorialReward > 0)) die('tutorialReward phải > 0');
+const re = d.calendar.randomEvents;
+if (!Array.isArray(re?.defs) || re.defs.length === 0) die('randomEvents.defs trống');
+const evIds = new Set();
+for (const e of re.defs) {
+  if (evIds.has(e.id)) die('trùng random event id ' + e.id); evIds.add(e.id);
+  if (!(e.weight > 0)) die(`event ${e.id} cần weight > 0`);
+  if (!(e.days >= 1)) die(`event ${e.id} cần days ≥ 1`);
+  if (!e.effects || typeof e.effects !== 'object') die(`event ${e.id} thiếu effects`);
+}
+if (!(re.maxActive >= 1)) die('randomEvents.maxActive ≥ 1');
+const pr = d.stages.pricing;
+if (!(pr && pr.min < 1 && pr.max > 1 && pr.step > 0 && pr.elasticity > 0)) die('stages.pricing không hợp lệ');
 console.log('data ok:', ids.size, 'industries,', chIds.length, 'channels,', d.calendar.events.length, 'events');
