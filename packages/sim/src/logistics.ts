@@ -1,5 +1,6 @@
 import { stages as ST, suppliers as SUP } from '@shopflow/data';
 import type { GameState, Delivery, Rng } from './types.js';
+import { logisticsSuspended } from './env.js';
 
 type Equip = { type: 'shelf' | 'packer' | 'robot'; level: 1 | 2 | 3 };
 const equips = (s: GameState) =>
@@ -36,6 +37,8 @@ function resolveRisk(d: Delivery, rng: Rng): Delivery {
 
 /** Gọi từ settleDay: xe chạy qua đêm. */
 export function advanceShipping(s: GameState, rng: Rng): GameState {
+  // Ngày lễ ngưng vận chuyển (spec 1.6): không đếm ngày, không giải rủi ro → không rút RNG nào.
+  if (logisticsSuspended(s.clock.month, s.clock.day)) return s;
   let unchecked = s.unchecked;
   const deliveries = s.deliveries.map((d0) => {
     if (d0.state !== 'shipping') return d0;

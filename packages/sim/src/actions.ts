@@ -268,7 +268,8 @@ export function buyUpgrade(s: GameState, id: string): GameState {
 
 export function chooseIndustry(s: GameState, industryId: string): GameState {
   const ind = IND.industries.find((i: any) => i.id === industryId);
-  if (!ind || ind.unlock !== 'start-option') return reject(s, 'Ngành này chưa thể mở');
+  const unlockOk = !!ind && (ind.unlock === 'start-option' || Number(ind.unlock) <= s.stage);
+  if (!unlockOk) return reject(s, 'Ngành này chưa thể mở');
   if (s.industries.includes(industryId)) return reject(s, 'Ngành đã mở');
   if (s.industries.length >= s.stage) return reject(s, 'Chưa mở thêm ngành ở màn này');
   return ok({ ...s, industries: [...s.industries, industryId], seo: { ...s.seo, [industryId]: UP.seoStart } });

@@ -43,9 +43,8 @@ describe('quests', () => {
     const s = at(2); s.seasonalBought = { valentine_gift: 1 };
     expect(questDone(checkQuests(s), 'buy_seasonal')).toBe(true);
   });
-  it('every quest id in data has a predicate (stage ≤ 3; stage-4 predicates land in a later M2b task)', () => {
+  it('every quest id in data has a predicate', () => {
     const ids = Object.entries((ST as any).quests as Record<string, { id: string }[]>)
-      .filter(([stage]) => Number(stage) <= 3)
       .flatMap(([, qs]) => qs.map((q) => q.id));
     expect(ids.length).toBeGreaterThan(0);
     for (const id of ids) expect(QUEST_PREDICATE_IDS, `nhiệm vụ "${id}" thiếu predicate`).toContain(id);
