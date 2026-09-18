@@ -16,8 +16,10 @@ const PREDICATES: Record<string, (s: GameState, q: QuestDef) => boolean> = {
   relationship_3: (s) => Object.keys(s.relationships).some((id) => relationshipLevel(s, id) >= 2), // index 2 = "cấp 3" trong spec (cấp 1 = 0 XP)
   survive_recession: (s) => s.survivedRecession,
   profit_5_days: (s) => s.profitStreakDays >= 5,
-  web_100_orders: (s, q) => (s.channels.find((c) => c.id === 'website')?.ordersDelivered ?? 0) >= (q.threshold ?? 100),
-  win_price_war: (s) => s.priceWarsWon >= 1,
+  // `?? 1` chỉ là mặc định cấu trúc "ít nhất một lần" — con số cân bằng thật nằm ở stages.json
+  // (validate.mjs bắt buộc hai nhiệm vụ này có threshold > 0).
+  web_100_orders: (s, q) => (s.channels.find((c) => c.id === 'website')?.ordersDelivered ?? 0) >= (q.threshold ?? 1),
+  win_price_war: (s, q) => s.priceWarsWon >= (q.threshold ?? 1),
 };
 
 /** Mọi id nhiệm vụ có predicate — dùng để đối chiếu với `stages.quests` trong test. */

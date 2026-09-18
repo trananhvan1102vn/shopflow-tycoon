@@ -7,6 +7,7 @@ const P = ST.pricing as { min: number; max: number; step: number; elasticity: nu
 
 export const priceMultOf = (s: GameState, productId: string): number => s.priceMult[productId] ?? 1;
 
+// Làm tròn 2 chữ số: validate.mjs bắt buộc `stages.pricing.step` là bội của 0.01 để phép này đúng.
 export function snapPriceMult(mult: number): number {
   const clamped = Math.min(P.max, Math.max(P.min, mult));
   return Math.round(Math.round(clamped / P.step) * P.step * 100) / 100;

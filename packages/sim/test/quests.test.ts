@@ -43,6 +43,25 @@ describe('quests', () => {
     const s = at(2); s.seasonalBought = { valentine_gift: 1 };
     expect(questDone(checkQuests(s), 'buy_seasonal')).toBe(true);
   });
+  it('ngưỡng nhiệm vụ màn 4 lấy từ data (threshold), không hard-code trong quests.ts', () => {
+    const q4 = questsForStage(4);
+    const web = q4.find((q) => q.id === 'web_100_orders')!;
+    const war = q4.find((q) => q.id === 'win_price_war')!;
+    expect(web.threshold).toBeGreaterThan(0);
+    expect(war.threshold).toBeGreaterThan(0);
+
+    const withWeb = (n: number) => {
+      const s = openChannel(at(4), 'website');
+      s.channels = s.channels.map((c) => (c.id === 'website' ? { ...c, ordersDelivered: n } : c));
+      return s;
+    };
+    expect(questDone(checkQuests(withWeb(web.threshold! - 1)), 'web_100_orders')).toBe(false);
+    expect(questDone(checkQuests(withWeb(web.threshold!)), 'web_100_orders')).toBe(true);
+
+    const withWars = (n: number) => { const s = at(4); s.priceWarsWon = n; return s; };
+    expect(questDone(checkQuests(withWars(war.threshold! - 1)), 'win_price_war')).toBe(false);
+    expect(questDone(checkQuests(withWars(war.threshold!)), 'win_price_war')).toBe(true);
+  });
   it('every quest id in data has a predicate', () => {
     const ids = Object.entries((ST as any).quests as Record<string, { id: string }[]>)
       .flatMap(([, qs]) => qs.map((q) => q.id));
