@@ -28,3 +28,8 @@ export function questProgress(game: Pick<GameState, 'stage' | 'questsDone'>) {
   const list = questsForStage(game.stage).map((q) => ({ ...q, done: game.questsDone.includes(q.id) }));
   return { total: list.length, done: list.filter((q) => q.done).length, list };
 }
+
+export function overallGoalPct(game: Parameters<typeof goalProgress>[0]): number | null {
+  const p = goalProgress(game);
+  return p ? Math.min(p.money.pct, p.orders.pct, p.rating.pct) : null;
+}

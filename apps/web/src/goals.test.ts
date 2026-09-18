@@ -23,3 +23,8 @@ describe('questProgress', () => {
     expect(questProgress(g({ stage: 3 })).list.every((x) => QUEST_LABEL[x.id])).toBe(true);
   });
 });
+import { overallGoalPct } from './goals';
+describe('overallGoalPct', () => {
+  it('is the weakest goal', () => { expect(overallGoalPct(g({ money: 80000, completedOrders: 4, rating: 4.2 }))).toBe(8); });
+  it('null without a goal', () => { expect(overallGoalPct(g({ stage: 6 }))).toBeNull(); });
+});

@@ -11,5 +11,5 @@ export default function Toast() {
     return () => clearTimeout(t);
   }, [reject]);
   if (!msg) return null;
-  return <div className="fixed left-1/2 top-16 z-50 -translate-x-1/2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-white shadow-lg">{msg}</div>;
+  return <div className="fixed left-1/2 top-32 z-50 -translate-x-1/2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-white shadow-lg">{msg}</div>;
 }
