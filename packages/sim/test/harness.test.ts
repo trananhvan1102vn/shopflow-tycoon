@@ -3,7 +3,7 @@ import { channels as CH, industries as IND, calendar as CAL } from '@shopflow/da
 import { createGame, tick, makeRng, retailUnitPrice } from '../src/index.js';
 import {
   buyRetail, buyBundle, placeEquipment, upgradeChannel,
-  openChannel, chooseIndustry, buySeo, buyUpgrade, expandGrid, advanceStage,
+  openChannel, chooseIndustry, buySeo, buyUpgrade, expandGrid, advanceStage, upgradeEquipment,
 } from '../src/actions.js';
 import type { GameState, Rng } from '../src/types.js';
 
@@ -85,28 +85,36 @@ function botAct2(s: GameState): GameState {
   // để không bị đứt mạch sinh đơn giữa hai lô hàng theo lịch (bước 6) vốn mất nhiều ngày để về.
   for (const id of s.industries) {
     const ind = (IND.industries as any[]).find((i) => i.id === id);
+    if (ind.products.length === 0) continue; // ngành chưa có dữ liệu sản phẩm (vd. sách ở màn 4)
     const onHand = ind.products.reduce((a: number, p: any) => a + (s.inventory[p.id] ?? 0), 0);
-    if (onHand < RESCUE_ON_HAND && spare >= 3000) {
+    // SLA rút xuống 12h ở màn 4 → cần đệm tồn kho dày hơn để đơn không hết hạn vì thiếu hàng.
+    const rescueFloor = s.stage >= 4 ? 25 : RESCUE_ON_HAND;
+    if (onHand < rescueFloor && spare >= 3000) {
       const cheap = ind.products[0];
       const r = buyRetail(s, cheap.id, 20, { carrierId: 'standard', supplierId: 'local' });
       if (!r.lastReject) return r;
     }
   }
-  // 1. Ngành mới khi được phép (ngành thứ 2 = fashion, thứ 3 = home).
+  // 1. Ngành mới khi được phép (ngành thứ 2 = fashion, thứ 3 = home, thứ 4 = sách theo unlock số).
   if (s.industries.length < s.stage) {
-    const next = (IND.industries as any[]).find((i) => i.unlock === 'start-option' && !s.industries.includes(i.id));
+    const next = (IND.industries as any[]).find((i) =>
+      (i.unlock === 'start-option' || Number(i.unlock) <= s.stage) && !s.industries.includes(i.id));
     if (next) return chooseIndustry(s, next.id);
   }
-  // 2. Kênh: MegaMall (màn 2), SocialShop (màn 3).
+  // 2. Kênh: MegaMall (màn 2), SocialShop (màn 3), Website riêng (màn 4).
   if (s.stage >= 2 && !has('mall') && s.rating >= 3.5 && spare >= 20000) return openChannel(s, 'mall');
   if (s.stage >= 3 && !has('social') && spare >= 15000) return openChannel(s, 'social');
-  // 3. Kho: mở 4×4, thêm kệ/bàn/robot theo tỉ lệ.
+  if (s.stage >= 4 && !has('website') && spare >= 40000) return openChannel(s, 'website');
+  // 3. Kho: mở 4×4 (màn 2), 5×5 (màn 4), thêm kệ/bàn/robot theo tỉ lệ, nâng robot lên cấp 2 (màn 4).
   const cells = s.grid.cells, empty = cells.findIndex((c) => c === null);
   const count = (t: string) => cells.filter((c) => c?.type === t).length;
   if (s.stage >= 2 && s.grid.size === 3 && spare >= 40000) return expandGrid(s);
+  if (s.stage >= 4 && s.grid.size === 4 && spare >= 120000) return expandGrid(s);
   if (empty >= 0 && count('shelf') < 3 && spare >= 4000) return placeEquipment(s, empty, 'shelf');
   if (empty >= 0 && count('packer') < 3 && spare >= 8000) return placeEquipment(s, empty, 'packer');
   if (empty >= 0 && s.stage >= 2 && count('robot') < 2 && spare >= 12000) return placeEquipment(s, empty, 'robot');
+  const robotLv1 = cells.findIndex((c) => c?.type === 'robot' && c.level === 1);
+  if (s.stage >= 4 && robotLv1 >= 0 && spare >= 40000) return upgradeEquipment(s, robotLv1);
   // 4. SEO cấp 1–2 cho mọi ngành (cấp 3 ở màn 3 khi dư tiền).
   for (const id of s.industries) {
     const seo = s.seo[id] ?? 40;
@@ -119,10 +127,13 @@ function botAct2(s: GameState): GameState {
   // 6. Hàng: mỗi ngành giữ ≥ 40 món trên đường + trên kệ; gói mùa nếu đang mở.
   for (const id of s.industries) {
     const ind = (IND.industries as any[]).find((i) => i.id === id);
+    if (ind.products.length === 0) continue; // vd. sách (unlock=4): chưa có products/bundles trong data
     const onHand = ind.products.reduce((a: number, p: any) => a + (s.inventory[p.id] ?? 0), 0);
     const inbound = s.deliveries.filter((d) => ind.products.some((p: any) => p.id in d.items))
       .reduce((a, d) => a + d.itemsTotal - Math.floor(d.itemsChecked), 0);
-    if (onHand + inbound >= 60) continue;
+    // SLA 12h ở màn 4 hết hạn đơn nhanh hơn nếu hết hàng trên kệ — giữ đệm tồn kho dày hơn.
+    const keepFloor = s.stage >= 4 ? 90 : 60;
+    if (onHand + inbound >= keepFloor) continue;
     const supplierId = s.stage >= 3 ? 'overseas' : s.stage >= 2 ? 'regional' : 'local';
     const bundles = ind.bundles.filter((b: any) => b.unlockStage <= s.stage).sort((a: any, b: any) => b.cost - a.cost);
     const now = s.clock.month * 100 + s.clock.day;
@@ -184,5 +195,36 @@ describe('balance harness — màn 2 & 3', () => {
     expect(stage3.ticks).toBeGreaterThanOrEqual(S3.min);
 
     expect(stage2.suspended || stage3.suspended, 'kênh bị ngưng vì thiếu phí').toBe(false);
+  });
+});
+
+describe('balance harness — màn 4', () => {
+  // Lặp lại màn 1–3 từ cùng seed để dựng trạng thái đầu màn 4 (độc lập với describe "màn 2 & 3" ở
+  // trên — không chia sẻ state), rồi chạy màn 4 với botAct2 mở rộng (ngành thứ 4, Website, kho 5×5,
+  // nâng robot cấp 2). Mục tiêu $300,000/4,000 đơn (ngoại suy ×5 chưa kiểm chứng) chỉ đạt $235,702
+  // ở tick 3600 (trần cửa sổ) vì đơn + rating đã vượt xa mục tiêu từ trước khi vào màn 4 (tích lũy từ
+  // màn 1–3) — tiền mới là yếu tố giới hạn thực sự; đã hiệu chỉnh xuống $220,000/2,900 đơn (giữ tỉ lệ
+  // ~7.500 cent/đơn, thưởng 20%, xem packages/data/stages.json + spec 1.9 ngày 2026-09-18). Với mục
+  // tiêu mới, màn 4 xong ở tick 2967 (seed 20260917), nằm trong cửa sổ bên dưới.
+  const S4 = { min: 2100, max: 3600 }; // 35–60 phút thực sau màn 3 (quyết định 2026-09-18)
+  it('màn 4 xong trong 35–60 phút thực, không kênh nào bị ngưng vì thiếu phí', () => {
+    const rng = makeRng(20260917);
+    let s = createGame(20260917, 'electronics');
+    const stage1 = runStage(s, rng, botAct, 1501);
+    expect(stage1.s.stageComplete).toBe(true);
+    s = advanceStage(stage1.s);
+
+    const stage2 = runStage(s, rng, botAct2, 1801);
+    expect(stage2.s.stageComplete).toBe(true);
+    s = advanceStage(stage2.s);
+
+    const stage3 = runStage(s, rng, botAct2, 2701);
+    expect(stage3.s.stageComplete).toBe(true);
+    s = advanceStage(stage3.s);
+
+    const stage4 = runStage(s, rng, botAct2, S4.max + 1);
+    expect(stage4.s.stageComplete, `màn 4 không xong (money=${stage4.s.money}, orders=${stage4.s.completedOrders}, rating=${stage4.s.rating})`).toBe(true);
+    expect(stage4.ticks).toBeGreaterThanOrEqual(S4.min);
+    expect(stage4.suspended, 'kênh bị ngưng vì thiếu phí ở màn 4').toBe(false);
   });
 });
