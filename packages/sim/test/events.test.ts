@@ -34,14 +34,41 @@ describe('rollRandomEvent', () => {
     const s = rollRandomEvent(at4(), seq(0.01, pick(idx('price_war')), 0.6));
     expect(s.activeRandomEvents[0]).toMatchObject({ id: 'price_war', industryId: 'fashion' });
   });
-  it('expires at endsDay; KOL applies +0.5 on start and −0.5 on end (capped)', () => {
+  it('expires at endsDay; KOL ở sát trần chỉ hoàn lại đúng phần đã cộng (4.8 → 5.0 → 4.8)', () => {
     let s = at4(); s.rating = 4.8;
     s = rollRandomEvent(s, seq(0.01, pick(idx('kol_review'))));
     expect(s.rating).toBe(5);
+    expect(s.activeRandomEvents[0].ratingApplied).toBeCloseTo(0.2);
     s.clock.day += 2;
     s = rollRandomEvent(s, seq(0.99));
     expect(s.activeRandomEvents).toEqual([]);
+    expect(s.rating).toBeCloseTo(4.8);
+  });
+  it('dưới trần thì cộng/trừ trọn delta (4.0 → 4.5 → 4.0)', () => {
+    let s = at4(); s.rating = 4;
+    s = rollRandomEvent(s, seq(0.01, pick(idx('kol_review'))));
     expect(s.rating).toBeCloseTo(4.5);
+    expect(s.activeRandomEvents[0].ratingApplied).toBeCloseTo(0.5);
+    s.clock.day += 2;
+    s = rollRandomEvent(s, seq(0.99));
+    expect(s.rating).toBeCloseTo(4);
+  });
+  it('entry v3 cũ (không có ratingApplied) vẫn hoàn lại trọn delta của def', () => {
+    const s = at4(); s.rating = 4.5;
+    s.activeRandomEvents = [{ id: 'kol_review', endsDay: absDay(s.clock), ordersDuring: 0 }];
+    const out = rollRandomEvent(s, seq(0.99));
+    expect(out.activeRandomEvents).toEqual([]);
+    expect(out.rating).toBeCloseTo(4);
+  });
+  it('bỏ entry có id không còn def (save cũ/bị sửa) — giữ nguyên chuỗi rút RNG', () => {
+    const s = at4();
+    s.activeRandomEvents = [{ id: 'nope', endsDay: 9999, ordersDuring: 0 }];
+    let calls = 0;
+    const vals = [0.01, pick(idx('flash_sale'))];
+    const rng = { next: () => vals[Math.min(calls++, vals.length - 1)] };
+    const out = rollRandomEvent(s, rng);
+    expect(out.activeRandomEvents.map((e) => e.id)).toEqual(['flash_sale']);
+    expect(calls).toBe(2); // chance + def, không rút thêm lần nào
   });
 });
 

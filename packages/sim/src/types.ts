@@ -29,7 +29,9 @@ export interface DayReport {
 
 export interface TutorialState { step: number; done: boolean; rewarded: boolean }
 
-export interface ActiveRandomEvent { id: string; endsDay: number; industryId?: string; ordersDuring: number }
+/** `ratingApplied`: phần uy tín THỰC SỰ được cộng lúc bắt đầu (sau khi kẹp trần/sàn) — hook kết
+ *  thúc hoàn lại đúng bằng nó. Tuỳ chọn để save v3 cũ (chưa có trường này) vẫn đọc được. */
+export interface ActiveRandomEvent { id: string; endsDay: number; industryId?: string; ordersDuring: number; ratingApplied?: number }
 
 export interface GameState {
   seed: number; clock: { minute: number; day: number; month: number; year: number };

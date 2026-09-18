@@ -40,6 +40,7 @@ function shipFee(s: GameState, carrierId: string, industryId: string | null, bun
   return Math.round((carrier?.fee ?? 0) * modifiers(s).shipping * mult);
 }
 
+// Nhập lẻ cố ý không áp modifiers().wholesale / wholesaleEnvMult (từ M2a) — backlog M2c.
 export function quoteRetail(s: GameState, productId: string, qty: number, o: PurchaseOpts) {
   const { carrierId, supplierId, grade } = norm(o);
   const f = findProduct(productId)!;

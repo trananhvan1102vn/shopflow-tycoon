@@ -155,19 +155,24 @@ function botAct2(s: GameState): GameState {
   return s;
 }
 
-/** Chạy một màn tới khi hoàn thành hoặc chạm trần tick; theo dõi việc kênh bị ngưng vì thiếu phí. */
+/**
+ * Chạy một màn tới khi hoàn thành hoặc chạm trần tick; theo dõi việc kênh bị ngưng vì thiếu phí
+ * và việc có sự kiện ngẫu nhiên nào thật sự chạy trong đoạn đo (chỉ quan sát, không rút RNG).
+ */
 function runStage(
   s: GameState, rng: Rng, bot: (s: GameState) => GameState, maxTicks: number,
-): { s: GameState; ticks: number; suspended: boolean } {
+): { s: GameState; ticks: number; suspended: boolean; sawRandomEvent: boolean } {
   let ticks = 0;
   let suspended = false;
+  let sawRandomEvent = false;
   while (!s.stageComplete && ticks < maxTicks) {
     if (ticks % 5 === 0) s = bot(s);
     s = tick(s, 4, rng);
     if (s.channels.some((c) => c.suspended)) suspended = true;
+    if (s.activeRandomEvents.length > 0) sawRandomEvent = true;
     ticks++;
   }
-  return { s, ticks, suspended };
+  return { s, ticks, suspended, sawRandomEvent };
 }
 
 describe('balance harness — màn 2 & 3', () => {
@@ -226,5 +231,7 @@ describe('balance harness — màn 4', () => {
     expect(stage4.s.stageComplete, `màn 4 không xong (money=${stage4.s.money}, orders=${stage4.s.completedOrders}, rating=${stage4.s.rating})`).toBe(true);
     expect(stage4.ticks).toBeGreaterThanOrEqual(S4.min);
     expect(stage4.suspended, 'kênh bị ngưng vì thiếu phí ở màn 4').toBe(false);
+    // Bằng chứng pipeline sự kiện ngẫu nhiên thật sự sống trong lần đo này (spec 1.3).
+    expect(stage4.sawRandomEvent, 'không có sự kiện ngẫu nhiên nào chạy trong màn 4').toBe(true);
   });
 });

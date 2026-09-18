@@ -5,6 +5,7 @@ import { snapPriceMult, demandMult, priceWarFor } from '../src/pricing.js';
 import { rollRandomEvent } from '../src/events.js';
 import { fulfilOrders } from '../src/fulfil.js';
 import { stages as ST, calendar as CAL } from '@shopflow/data';
+import type { GameState } from '../src/types.js';
 
 const seq = (...vals: number[]) => { let i = 0; return { next: () => vals[Math.min(i++, vals.length - 1)] }; };
 const at4 = () => { const s = createGame(42, 'electronics'); s.stage = 4; s.clock.day = 8; s.inventory = { phone_case: 10 }; s.inventoryGrades = { phone_case: { A: 0, B: 10, C: 0 } }; return s; };
@@ -39,6 +40,21 @@ describe('elasticity', () => {
   });
 });
 
+const ALL_EL = ['phone_case', 'cable', 'power_bank', 'earbuds', 'watch'];
+
+/** Giao đúng `n` đơn của một sản phẩm (1 đơn/tick, không trả hàng) để đếm `ordersDuring`. */
+function deliver(s0: GameState, n: number, productId: string, industryId: string): GameState {
+  let s: GameState = { ...s0, grid: { ...s0.grid, cells: s0.grid.cells.slice() } };
+  s.grid.cells[0] = { type: 'shelf', level: 1 };
+  s.orders = Array.from({ length: n }, (_, i) => ({
+    id: `o${i}`, productId, industryId, channelId: 'flea', value: 800, slaLeft: 720, state: 'queued' as const,
+  }));
+  s.inventory = { [productId]: n + 10 };
+  s.inventoryGrades = { [productId]: { A: 0, B: n + 10, C: 0 } };
+  for (let i = 0; i < n; i++) s = fulfilOrders(s, 4, seq(0.5, 0.99));
+  return s;
+}
+
 describe('price war', () => {
   const warOn = () => { const s = at4(); return rollRandomEvent(s, seq(0.01, pick('price_war'), 0.0)); };
   it('penalises products priced above the rival', () => {
@@ -51,11 +67,8 @@ describe('price war', () => {
   });
   it('counts delivered orders of the industry and awards the win at expiry', () => {
     let s = warOn();
-    for (const p of ['phone_case', 'cable', 'power_bank', 'earbuds', 'watch']) s = setPrice(s, p, 0.85);
-    s.grid.cells[0] = { type: 'shelf', level: 1 };
-    s.orders = Array.from({ length: 20 }, (_, i) => ({ id: `o${i}`, productId: 'phone_case', industryId: 'electronics', channelId: 'flea', value: 800, slaLeft: 720, state: 'queued' as const }));
-    s.inventory = { phone_case: 30 }; s.inventoryGrades = { phone_case: { A: 0, B: 30, C: 0 } };
-    for (let i = 0; i < 20; i++) s = fulfilOrders(s, 4, seq(0.5, 0.99)); // 1 unit/tick
+    for (const p of ALL_EL) s = setPrice(s, p, 0.85);
+    s = deliver(s, 20, 'phone_case', 'electronics'); // 1 đơn/tick, giá ≤ đối thủ cả kỳ
     expect(s.activeRandomEvents[0].ordersDuring).toBe(20);
     s.clock.day += 3;
     s = rollRandomEvent(s, seq(0.99));
@@ -63,6 +76,29 @@ describe('price war', () => {
   });
   it('lost when a product stays above the rival', () => {
     let s = warOn(); s.clock.day += 3;
+    s = rollRandomEvent(s, seq(0.99));
+    expect(s.priceWarsWon).toBe(0);
+  });
+  it('đơn giao khi còn bán đắt hơn đối thủ không được tính — hạ giá phút chót không thắng', () => {
+    let s = deliver(warOn(), 20, 'phone_case', 'electronics'); // giao ở ×1.0 suốt kỳ
+    expect(s.activeRandomEvents[0].ordersDuring).toBe(0);
+    for (const p of ALL_EL) s = setPrice(s, p, 0.85); // hạ giá đúng ngày cuối
+    s.clock.day += 3;
+    s = rollRandomEvent(s, seq(0.99));
+    expect(s.priceWarsWon).toBe(0);
+  });
+  it('đơn của ngành khác không bao giờ được tính, dù giá ≤ đối thủ', () => {
+    let s = warOn();
+    s.priceMult = { ...s.priceMult, tshirt: 0.7 };
+    s = deliver(s, 5, 'tshirt', 'fashion');
+    expect(s.activeRandomEvents[0].ordersDuring).toBe(0);
+  });
+  it('chỉ xét sản phẩm đã mở khoá ở màn hiện tại: bỏ sót hàng mở ở màn 2 là thua', () => {
+    let s = warOn();
+    for (const p of ['phone_case', 'cable', 'power_bank']) s = setPrice(s, p, 0.85); // earbuds/watch (màn 2) vẫn ×1.0
+    s = deliver(s, 20, 'phone_case', 'electronics');
+    expect(s.activeRandomEvents[0].ordersDuring).toBe(20);
+    s.clock.day += 3;
     s = rollRandomEvent(s, seq(0.99));
     expect(s.priceWarsWon).toBe(0);
   });

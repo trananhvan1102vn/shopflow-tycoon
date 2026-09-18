@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, tick, makeRng } from '../src/index.js';
+import { createGame } from '../src/index.js';
 import { levelK } from '../src/formulas.js';
 import { logisticsSuspended } from '../src/env.js';
 import { advanceShipping } from '../src/logistics.js';

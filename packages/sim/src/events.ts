@@ -36,13 +36,18 @@ function expireEvents(s: GameState): GameState {
   const keep: ActiveRandomEvent[] = [];
   for (const e of s.activeRandomEvents) {
     const def = randomEventDef(e.id);
-    if (!def || e.endsDay > today) { keep.push(e); continue; }
-    if (def.effects.ratingDelta) rating = clampRating(rating - def.effects.ratingDelta);
+    // Không còn def (save cũ / bị sửa tay) → bỏ luôn, nếu giữ lại thì nó chiếm chỗ maxActive vĩnh viễn.
+    if (!def) continue;
+    if (e.endsDay > today) { keep.push(e); continue; }
+    if (def.effects.ratingDelta) rating = clampRating(rating - (e.ratingApplied ?? def.effects.ratingDelta));
     if (def.effects.rivalPriceMult && e.industryId) {
       const rival = def.effects.rivalPriceMult;
       const ind = (IND.industries as any[]).find((i) => i.id === e.industryId);
       if (!ind) continue;
-      const matched = ind.products.every((p: any) => (s.priceMult[p.id] ?? 1) <= rival);
+      // Chỉ xét sản phẩm người chơi đặt được giá ở màn hiện tại (setPrice từ chối hàng còn khoá).
+      const matched = ind.products
+        .filter((p: any) => (p.unlockStage ?? 1) <= s.stage)
+        .every((p: any) => (s.priceMult[p.id] ?? 1) <= rival);
       if (matched && e.ordersDuring >= (def.minOrders ?? 0)) priceWarsWon++;
     }
   }
@@ -64,7 +69,15 @@ export function rollRandomEvent(s: GameState, rng: Rng): GameState {
   let industryId: string | undefined;
   if (def.targetIndustry === 'owned') industryId = out.industries[Math.floor(rng.next() * out.industries.length)];
   let rating = out.rating;
-  if (def.effects.ratingDelta) rating = clampRating(rating + def.effects.ratingDelta);
-  const entry: ActiveRandomEvent = { id: def.id, endsDay: absDay(out.clock) + def.days, ordersDuring: 0, ...(industryId ? { industryId } : {}) };
+  // Ghi lại phần thực sự cộng được (sát trần thì < delta) để hook kết thúc không trừ quá tay.
+  let ratingApplied: number | undefined;
+  if (def.effects.ratingDelta) {
+    rating = clampRating(rating + def.effects.ratingDelta);
+    ratingApplied = rating - out.rating;
+  }
+  const entry: ActiveRandomEvent = {
+    id: def.id, endsDay: absDay(out.clock) + def.days, ordersDuring: 0,
+    ...(industryId ? { industryId } : {}), ...(ratingApplied !== undefined ? { ratingApplied } : {}),
+  };
   return { ...out, rating, activeRandomEvents: [...out.activeRandomEvents, entry] };
 }
