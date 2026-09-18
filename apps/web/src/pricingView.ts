@@ -9,6 +9,7 @@ export interface PriceInfo {
   marginPerUnit: Cents;
   ordersPerHour: number | null;
   rival: number | null;
+  rivalPrice: Cents | null;
   aboveRival: boolean;
 }
 
@@ -51,7 +52,8 @@ export function productPriceInfo(game: GameState, productId: string): PriceInfo 
 
   const war = priceWarFor(game, ind.id);
   const rival = war ? war.rival : null;
+  const rivalPrice = war ? Math.round(list * war.rival) : null;
   const aboveRival = rival !== null && mult > rival;
 
-  return { list, mult, price, marginPerUnit, ordersPerHour, rival, aboveRival };
+  return { list, mult, price, marginPerUnit, ordersPerHour, rival, rivalPrice, aboveRival };
 }

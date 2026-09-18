@@ -43,8 +43,8 @@ export default function SalesPricing() {
 
       {war && (
         <div className="rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-900 shadow">
-          ⚔️ Chiến giá · đối thủ bán ×{war.rival} · còn {war.entry.endsDay - absDay(game.clock)} ngày ·{' '}
-          {war.entry.ordersDuring}/{war.def.minOrders ?? 0} đơn
+          ⚔️ Chiến giá · đối thủ bán rẻ hơn {Math.round((1 - war.rival) * 100)}% · còn{' '}
+          {war.entry.endsDay - absDay(game.clock)} ngày · {war.entry.ordersDuring}/{war.def.minOrders ?? 0} đơn
         </div>
       )}
 
@@ -66,6 +66,11 @@ export default function SalesPricing() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500">Niêm yết {usdCents(info.list)}</p>
+                  {info.rivalPrice !== null && (
+                    <p className={`text-xs font-bold ${info.aboveRival ? 'text-red-600' : 'text-amber-600'}`}>
+                      Đối thủ: {usdCents(info.rivalPrice)}
+                    </p>
+                  )}
                 </div>
                 {info.mult !== 1 && (
                   <button
